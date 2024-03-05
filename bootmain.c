@@ -1,9 +1,5 @@
-#include "boot.h"
-#include "io.h"
-
-//boot main start 
+#define CRTPORT 0x3d4
 void bootmain() {
-    //do nothing
-    outb(CRTPORT,15);
-    outb(CRTPORT+1,79);
+    outb(CRTPORT, 15);
+    outb(CRTPORT+1, 79);
 }
