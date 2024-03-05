@@ -23,10 +23,13 @@ qemu-gdb:
 qemu-vnc:
 	${QEMU} ${OS_IMG} -vnc 192.168.88.128:5900 
 all: 
-	${CC} boot.S ${CCOPTS} -o boot.o
 	${CC} io.c ${CCOPTS} -o  io.o
+	${CC} console.c ${CCOPTS} -o console.o
+	${CC} boot.S ${CCOPTS} -o boot.o
 	${CC} bootmain.c ${CCOPTS} -o bootmain.o
-	${LD} ${LDOPTS} -e _start --oformat=binary -o ${OS_IMG} boot.o bootmain.o io.o -Ttext=0x7c00
+	${LD} ${LDOPTS} -e _start --oformat=binary -o ${OS_IMG} \
+	boot.o bootmain.o console.o io.o \
+	-Ttext=0x7c00
 	${MAGIC}
 
 clean:

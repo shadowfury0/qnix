@@ -1,4 +1,4 @@
-#include "io.h"
+#include "i386.h"
 uchar inb(ushort port)
 {
     uchar data;
