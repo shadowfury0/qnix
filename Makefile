@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 
 CC = gcc
-CCOPTS = -fno-pic -nostdinc -I. -c -m32
+CCOPTS = -O1 -fno-pic -nostdinc -I. -c -m32
 AS = as
 LD = ld
 LDOPTS = -m elf_i386
@@ -15,21 +15,25 @@ CPUS = 1
 GDBPORT = 2500
 
 MAGIC = echo -ne '\x55\xAA' | dd of=${OS_IMG} bs=1 seek=510 conv=notrunc
-
-qemu:
+OBJS = 	boot.o \
+		bootmain.o \
+		console.o \
+		io.o 
+qemu: all
 	${QEMU} ${QEMUOPTS}
-qemu-gdb:
+qemu-gdb: all
 	${QEMU} -S ${QEMUOPTS} -gdb tcp::$(GDBPORT)
-qemu-vnc:
-	${QEMU} ${OS_IMG} -vnc 192.168.88.128:5900 
+qemu-vnc: all
+	${QEMU} ${OS_IMG} -vnc 192.168.88.128:5900
+bochs: all
+	bochs -f bochsrc.bxrc
 all: 
 	${CC} io.c ${CCOPTS} -o  io.o
 	${CC} console.c ${CCOPTS} -o console.o
 	${CC} boot.S ${CCOPTS} -o boot.o
 	${CC} bootmain.c ${CCOPTS} -o bootmain.o
 	${LD} ${LDOPTS} -e _start --oformat=binary -o ${OS_IMG} \
-	boot.o bootmain.o console.o io.o \
-	-Ttext=0x7c00
+	${OBJS} -Ttext=0x7c00
 	${MAGIC}
 
 clean:

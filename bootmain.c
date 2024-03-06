@@ -1,3 +1,8 @@
+#include "console.h"
 void bootmain() {
-    vgaputc();
+    int pos;
+    for (pos = 0;pos <2000;pos++)
+        vgaputc('A');
+    for (pos = 0;pos <100;pos++)
+        vgaputc('L');
 }

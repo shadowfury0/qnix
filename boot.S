@@ -14,7 +14,7 @@ _start:
 	movl    %cr0, %eax
 	orl     $CR0_PE, %eax
 	movl    %eax, %cr0
-	ljmp    $0x08,$start32
+	ljmp    $(SEG_KCODE<<3),$start32
 
 .code32
 start32:
@@ -27,17 +27,8 @@ start32:
 	movw    %ax, %gs                # -> GS
 
 	movl	$0xb8000,%edi
-	leal	welcome,%esi
-	call	print
-
-	
-#	控制寄存器
-	#movw	$CRTPORT,%dx
-	#movb	$0x0f,%al
-	#call	outb
-	#incw	%dx
-	#movb	$0x14,%al
-	#call	outb
+	#leal	welcome,%esi
+	#call	print
 
 	call	bootmain
 
