@@ -6,7 +6,8 @@ _start:
 	movw    %ax,%ds             # -> Data Segment
 	movw    %ax,%es             # -> Extra Segment
 	movw    %ax,%ss             # -> Stack Segment
-	
+
+
 #开启32位模式
 	lgdt    gdtdesc
 #跳转之前必须把中断关掉
@@ -26,28 +27,12 @@ start32:
 	movw    %ax, %fs                # -> FS
 	movw    %ax, %gs                # -> GS
 
-	movl	$0xb8000,%edi
-	#leal	welcome,%esi
-	#call	print
 
+# 读取硬盘扇区的函数
 	call	bootmain
-
-	#leal	msg,%esi
-	#call	print
 
 fin:
 	jmp 	fin
-
-print:
-	lodsb
-	cmpb	$0,%al
-	je		print_end
-	stosb
-	movb	$0x07,%al
-	stosb
-	jmp 	print
-print_end:
-	ret
 
 
 # Bootstrap GDT
@@ -59,10 +44,3 @@ gdt:
 gdtdesc:
 	.word	(gdtdesc - gdt - 1)		# sizeof(gdt) - 1
 	.long 	gdt						# address gdt
-
-msg:
-	.string "Running"
-welcome:
-	.string "Welcome to My QNIUX!"
-
-
