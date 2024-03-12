@@ -1,14 +1,16 @@
+const char* welcome = "\
+*************\n\
+ ***********\n\
+  *********\n\
+   *******\n\
+    *****\n\
+     ***\n\
+      *\n\
+";
 void 
 init() {
-    // int i;
-    // for (i=0;i<150;i++)
-    //     vgaputc('A');
-    // vgaputc('\n');
-    vgaputc('O');
-    vgaputc('O');
-    vgaputc('O');
+    vprintf("welcome to qnix");
     vgaputc('\n');
-    vgaputc('\b');
-    vgaputc('O');
-    vgaputc('O');
+    vprintf(welcome);
+    vprintf("loading...");
 }

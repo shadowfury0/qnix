@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 
 CC = gcc
-CCOPTS = -O1 -fno-pic -nostdinc -I. -c -m32 -g
+CCOPTS = -O1 -fno-pic -nostdinc -I. -c -m32 -g -w
 AS = as
 LD = ld
 LDOPTS = -m elf_i386 -N 
@@ -35,8 +35,8 @@ bochs-img:
 ifneq ($(wildcard ${OS_IMG}),)
 	rm -f ${OS_IMG}
 endif 
-	bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
 # bximage -mode=create -fd=1.44M -imgmode=flat -q ${OS_IMG}
+	bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
 
 bochs: bochs-img all
 	${BOCHS} -q 'gdbstub: enabled=0'

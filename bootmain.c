@@ -26,7 +26,7 @@ readsect(void *dst, uint offset)
     waitdisk();
     insl(0x1F0, dst, SECTSIZE/4);
 }
-
+// c read size byte
 void
 readseg(uchar* s, uint c, uint offset)
 {
@@ -63,7 +63,9 @@ bootmain() {
     struct elf32_hdr* elf;
     void(*entry)();
     elf = (struct elf32_hdr*)0x100000;
-    readseg((uchar*)elf, 20, 0);
+
+    //一次性读满
+    readseg((uchar*)elf, 4096, 0);
     if ( elf->e_magic != ELF32_MAGIC ) 
         return;
 
