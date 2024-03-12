@@ -1,5 +1,5 @@
-#include "i386.h"
 #include "io.h"
+#include "elf32.h"
 #define SECTSIZE  512
 void
 waitdisk(void)
@@ -28,21 +28,45 @@ readsect(void *dst, uint offset)
 }
 
 void
-writesect(void* dst,uint offset) {
-    outb(0x1F2, 1);   // count = 1
-    outb(0x1F3, offset);
-    outb(0x1F4, offset >> 8);
-    outb(0x1F5, offset >> 16);
-    outb(0x1F6, (offset >> 24) | 0xE0);
-    outb(0x1F7, 0x30);  // cmd 0x30 - write sectors
-    // Write data.
-    waitdisk();
-    outsl(0x1F0, dst, SECTSIZE/4);
+readseg(uchar* s, uint c, uint offset)
+{
+    uchar* e;
+    e = s + c;
+    // Round down to sector boundary.
+    s -= offset % SECTSIZE;
+
+    // Translate from bytes to sectors; kernel starts at sector 1.
+    offset = (offset / SECTSIZE) + 1;
+
+    // If this is too slow, we could read lots of sectors at a time.
+    // We'd write more to memory than asked, but it doesn't matter --
+    // we load in increasing order.
+    for(; s < e; s += SECTSIZE, offset++)
+        readsect(s, offset);
 }
+
+// void
+// writesect(void* dst,uint offset) {
+//     outb(0x1F2, 1);   // count = 1
+//     outb(0x1F3, offset);
+//     outb(0x1F4, offset >> 8);
+//     outb(0x1F5, offset >> 16);
+//     outb(0x1F6, (offset >> 24) | 0xE0);
+//     outb(0x1F7, 0x30);  // cmd 0x30 - write sectors
+//     // Write data.
+//     waitdisk();
+//     outsl(0x1F0, dst, SECTSIZE/4);
+// }
 
 void 
 bootmain() {
-    void* entry = (void*)0x7e00;
-    readsect(entry,1);
+    struct elf32_hdr* elf;
+    void(*entry)();
+    elf = (struct elf32_hdr*)0x100000;
+    readseg((uchar*)elf, 20, 0);
+    if ( elf->e_magic != ELF32_MAGIC ) 
+        return;
 
+    entry = (void(*)(void))(elf->e_entry);
+    entry();
 }

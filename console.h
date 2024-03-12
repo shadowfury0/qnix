@@ -1,1 +1,0 @@
-extern void vgaputc(int c);

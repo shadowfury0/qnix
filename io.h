@@ -1,4 +1,5 @@
-#include "i386.h"
+#include "type.h"
+
 static inline uchar inb(ushort port)
 {
     uchar data;
@@ -32,6 +33,24 @@ static inline void outb(ushort port, uchar data)
 static inline void outw(ushort port, ushort data)
 {
     asm volatile("out %0,%1" : : "a" (data), "d" (port));
+}
+
+static inline void
+stosb(void *addr, int data, int cnt)
+{
+    asm volatile("cld; rep stosb" :
+                "=D" (addr), "=c" (cnt) :
+                "0" (addr), "1" (cnt), "a" (data) :
+                "memory", "cc");
+}
+
+static inline void
+stosl(void *addr, int data, int cnt)
+{
+    asm volatile("cld; rep stosl" :
+                "=D" (addr), "=c" (cnt) :
+                "0" (addr), "1" (cnt), "a" (data) :
+                "memory", "cc");
 }
 
 static inline void cli(void)

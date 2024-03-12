@@ -15,7 +15,6 @@ vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 # choose the boot disk. 
 boot:disk
 
-
 ata0-master: type=disk, path=qos.img, mode=flat
 #=======================================================
 #ATA controller for hard disks and cdroms

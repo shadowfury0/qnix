@@ -4,8 +4,8 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x100000 + SIZEOF_HEADERS;
-	.text :{
+	. = 0x7c00;
+	.text : AT(0x7c00) {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 	}
 
