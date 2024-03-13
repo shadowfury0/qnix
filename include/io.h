@@ -62,3 +62,15 @@ static inline void sti(void)
 {
     asm volatile("sti");
 }
+
+static inline void
+lidt(struct gatedesc *p, int size)
+{
+    volatile ushort idt[3];
+
+    idt[0] = size-1;
+    idt[1] = (uint)p;
+    idt[2] = (uint)p >> 16;
+
+    asm volatile("lidt (%0)" : : "r" (idt));
+}

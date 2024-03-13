@@ -17,7 +17,12 @@ all:
 	${MAGIC}
 
 gdb: CCOPTS += -g
-gdb:all
+gdb:
+	${MAKE} -C boot	gdb
+	${MAKE} -C kernel gdb
+	dd if=boot/boots.o of=${OS_IMG} bs=512 conv=notrunc
+	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
+	${MAGIC}
 
 bochs-img: bochsrc.bxrc
 ifneq ($(wildcard ${OS_IMG}),)

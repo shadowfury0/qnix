@@ -2,6 +2,7 @@
 INDS = 	elf32.h\
 		io.h\
 		type.h\
+		idt.h\
 
 all:INDS
 

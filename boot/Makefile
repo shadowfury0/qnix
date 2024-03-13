@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 OBJS = boot.ld boot.h boot.S bootmain.c
 CC = gcc
-CCOPTS = -O1 -fno-pic -nostdinc -I. -I../include -c -m32  -w
+CCOPTS = -O1 -fno-pic -nostdinc -I../include -c -m32  -w
 LD = ld
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy

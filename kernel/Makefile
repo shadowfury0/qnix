@@ -1,22 +1,28 @@
 .DEFAULT_GOAL := all
 OBJS = 	kernel.ld\
-		console.c\
+		idt.S\
 		init.c\
+		trap.c\
 		memory.c\
+		console.c\
 
 CC = gcc
-CCOPTS = -O1 -fno-pic -nostdinc -I. -I../include -c -m32  -w
+CCOPTS = -O1 -fno-pic -nostdinc -I../include -c -m32  -w
 LD = ld
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy
 OBJDUMP = objdump
 KERNEL	 =  init.o\
+			idt.o\
+			trap.o\
 			memory.o\
-			console.o
+			console.o\
 
 #all strategy
 all:OBJS
+	${CC} idt.S ${CCOPTS} -o idt.o
 	${CC} init.c ${CCOPTS} -o init.o
+	${CC} trap.c ${CCOPTS} -o trap.o
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} console.c ${CCOPTS} -o console.o
 	${LD} ${LDOPTS} -T kernel.ld -e init -o kernel.o ${KERNEL} 
