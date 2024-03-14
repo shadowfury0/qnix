@@ -7,7 +7,7 @@ OBJS = 	kernel.ld\
 		console.c\
 
 CC = gcc
-CCOPTS = -O1 -fno-pic -nostdinc -I../include -c -m32  -w
+CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../include -c -m32  -w
 LD = ld
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy
@@ -25,7 +25,7 @@ all:OBJS
 	${CC} trap.c ${CCOPTS} -o trap.o
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} console.c ${CCOPTS} -o console.o
-	${LD} ${LDOPTS} -T kernel.ld -e init -o kernel.o ${KERNEL} 
+	${LD} ${LDOPTS} -T kernel.ld -e init -o kernel.o ${KERNEL}
 
 # magic !!!
 gdb: CCOPTS += -g
@@ -36,4 +36,4 @@ clean:
 	rm -f *.o kernel.asm
 
 
-.PHONY: clean OBJS gdb
+.PHONY: clean OBJS gdb all

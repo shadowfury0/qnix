@@ -1,4 +1,4 @@
-#include "boot.h"
+#include "def.h"
 #include "idt.h"
 #include "io.h"
 
@@ -10,7 +10,7 @@ init_idt(void)
 {
     int i;
     for (i=0;i<256;i++)
-       SETGATE(idts[i],GT_INT,(SEG_KCODE << 3),0,0);
+       SETGATE(idts[i],GT_INT,SEG_KCODE << 3,0,0);
 
     lidt(IDT_ADDR,256);
 

@@ -9,6 +9,7 @@ const char* welcome = "\
 ";
 void 
 init() {
+    init_idt();
     vprintf("welcome to qnix");
     vgaputc('\n');
     vprintf(welcome);

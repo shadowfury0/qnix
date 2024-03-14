@@ -24,9 +24,9 @@ struct gatedesc {
 #define GT_INT    0xE     // 32-bit Interrupt Gate
 #define GT_TRAP   0xF     // 32-bit Trap Gate
 
-#define SETGATE(gate, t, s, off, d)       \
+#define SETGATE(gate, t, c, off, d)       \
       gate.off_l = (uint)(off) & 0xffff;  \
-      gate.cs = (s);                      \
+      gate.cs = (c);                      \
       gate.args = 0;                      \
       gate.rsv1 = 0;                      \
       gate.type = t;                      \

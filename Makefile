@@ -1,30 +1,30 @@
 .DEFAULT_GOAL := all
 
-MAGIC = echo -ne '\x55\xAA' | dd of=${OS_IMG} bs=1 seek=510 conv=notrunc
+MAGIC = $(shell ./magic.sh)
 QEMU = qemu-system-i386
 OS_IMG = qos.img
-QEMUOPTS = -nographic -drive file=${OS_IMG},index=0,media=disk,format=raw -m 128 -smp ${CPUS}
+QEMUOPTS = -nic none -drive file=${OS_IMG},index=0,media=disk,format=raw -m 128 -smp ${CPUS}
 CPUS = 1
 GDBPORT = 2500
-BOCHS	= 	bochs -f bochsrc.bxrc
+BOCHS	= 	bochs -f .bochsrc
 
 all:
 	${MAKE} -C include
 	${MAKE} -C boot
 	${MAKE} -C kernel
-	dd if=boot/boots.o of=${OS_IMG} bs=512 conv=notrunc
+	dd if=boot/boots.bin of=${OS_IMG} bs=512 conv=notrunc
 	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
 	${MAGIC}
-
+	
 gdb: CCOPTS += -g
 gdb:
 	${MAKE} -C boot	gdb
 	${MAKE} -C kernel gdb
-	dd if=boot/boots.o of=${OS_IMG} bs=512 conv=notrunc
+	dd if=boot/boots.bin of=${OS_IMG} bs=512 conv=notrunc
 	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
 	${MAGIC}
 
-bochs-img: bochsrc.bxrc
+bochs-img: .bochsrc
 ifneq ($(wildcard ${OS_IMG}),)
 	rm -f ${OS_IMG}
 endif
@@ -32,9 +32,10 @@ endif
 # bximage -mode=create -fd=1.44M -imgmode=flat -q ${OS_IMG}
 
 bochs: bochs-img all
-	${BOCHS} -q 'gdbstub: enabled=0'
-bochs-gdb: bochs-img gdb
-	${BOCHS}
+	${BOCHS} 
+# -q 'gdbstub: enabled=0'
+# bochs-gdb: bochs-img gdb
+# 	${BOCHS}
 
 qemu: all
 	${QEMU} ${QEMUOPTS}
@@ -53,4 +54,4 @@ clean:
 	${MAKE} -C kernel clean
 	rm -f *.tags *.log qos.img
 
-.PHONY: clean bochs-img gdb bochsrc.bxrc
+.PHONY: clean bochs-img gdb all 

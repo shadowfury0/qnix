@@ -2,7 +2,7 @@
 # Configuration file for Bochs 
  ############################################################### 
 # how much memory the emulated machine will have 
-megs: 32 
+megs: 64 
 
 # filename of ROM images 
 romimage: file=/usr/local/share/bochs/BIOS-bochs-latest 
@@ -14,8 +14,8 @@ vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 
 # choose the boot disk. 
 boot:disk
-
-ata0-master: type=disk, path=qos.img, mode=flat
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="qos.img", mode=flat
 #=======================================================
 #ATA controller for hard disks and cdroms
 #=======================================================
@@ -32,18 +32,13 @@ log : bochssrc.log
 # disable the mouse
 mouse: enabled=0 
 
-#gdb
-magic_break: enabled=1
-gdbstub: enabled=1, port=2500
 
 # Sample Bochs configuration file for ATA hard disk booting
-
 # Boot from ATA hard disk
-boot: disk
-
 # ATA disk configuration
-ata0-master: type=disk, path="qos.img", mode=flat
-
-
 # enable key mapping, using US layout as default. 
 keyboard: keymap=/usr/local/share/bochs/keymaps/x11-pc-us.map
+
+#gdb
+#magic_break: enabled=1
+#gdbstub: enabled=1, port=2500,text_base=0,data_base=0,bss_base=0
