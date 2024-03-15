@@ -63,6 +63,11 @@ static inline void sti(void)
     asm volatile("sti");
 }
 
+static inline void stihlt(void)
+{
+    asm volatile("sti;hlt");
+}
+
 static inline void
 lidt(struct gatedesc *p, int size)
 {

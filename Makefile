@@ -25,10 +25,10 @@ gdb:
 	${MAGIC}
 
 bochs-img: .bochsrc
-ifneq ($(wildcard ${OS_IMG}),)
-	rm -f ${OS_IMG}
-endif
-	bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
+# ifneq ($(wildcard ${OS_IMG}),)
+# 	rm -f ${OS_IMG}
+# endif
+# bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
 # bximage -mode=create -fd=1.44M -imgmode=flat -q ${OS_IMG}
 
 bochs: bochs-img all
@@ -46,8 +46,8 @@ qemu-vnc: all
 
 #use this command with bochs-gdb
 debug:
-	gdb -ex "target extended-remote localhost:${GDBPORT}"  -ex "file boot/bootsource"
-# -ex "file kernel.o"
+	gdb -ex "target extended-remote localhost:${GDBPORT}"  -ex "file kernel/kernelsource"
+# -ex "file boot/bootsource"
 
 clean:
 	${MAKE} -C boot clean

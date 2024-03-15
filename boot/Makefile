@@ -20,7 +20,6 @@ all:OBJS
 # magic !!!
 gdb: CCOPTS += -g
 gdb: all
-	${LD} ${LDOPTS} -T boot.ld -e _start -o ${BOOT_SOURCE} ${BOOT} -Ttext=0x7c00
 	${OBJDUMP} -d -M att ${BOOT_SOURCE} > boots.asm
 
 clean:
