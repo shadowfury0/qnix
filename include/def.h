@@ -19,17 +19,6 @@
 // Control Register flags
 #define CR0_PE          0x00000001      // Protection Enable
 
-// -------------------------------------------------------
-// PIC 
-#define PIC_M_CTRL      0x20
-#define PIC_M_DATA      0x21 
-#define PIC_S_CTRL      0xa0
-#define PIC_S_DATA      0xa1
 
-#define PIC_EOI         0x20
-// Gate Type
-#define GT_TSS    0x9     // Available 32-bit TSS
-#define GT_INT    0xE     // 32-bit Interrupt Gate
-#define GT_TRAP   0xF     // 32-bit Trap Gate
-// -------------------------------------------------------
-
+#define true 1
+#define false 0

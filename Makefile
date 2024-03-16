@@ -24,14 +24,14 @@ gdb:
 	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
 	${MAGIC}
 
-bochs-img: .bochsrc
+img:
+	bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
 # ifneq ($(wildcard ${OS_IMG}),)
 # 	rm -f ${OS_IMG}
 # endif
-# bximage -mode=create -hd=10 -imgmode=flat -q ${OS_IMG}
 # bximage -mode=create -fd=1.44M -imgmode=flat -q ${OS_IMG}
 
-bochs: bochs-img all
+bochs: all
 	${BOCHS} 
 # -q 'gdbstub: enabled=0'
 # bochs-gdb: bochs-img gdb
@@ -54,4 +54,4 @@ clean:
 	${MAKE} -C kernel clean
 	rm -f *.tags *.log qos.img
 
-.PHONY: clean bochs-img gdb all 
+.PHONY: clean img gdb all 

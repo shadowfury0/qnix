@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := all
 OBJS = 	kernel.ld\
 		idt.S\
+		panic.c\
 		init.c\
+		exit.c\
 		trap.c\
 		kyb.c\
 		memory.c\
@@ -14,7 +16,9 @@ KERNEL_SOURCE = kernelsource
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy
 OBJDUMP = objdump
-KERNEL	 =  init.o\
+KERNEL	 =  panic.o\
+			init.o\
+			exit.o\
 			idt.o\
 			trap.o\
 			kyb.o\
@@ -24,7 +28,9 @@ KERNEL	 =  init.o\
 #all strategy
 compile:
 	${CC} idt.S ${CCOPTS} -o idt.o
+	${CC} panic.c ${CCOPTS} -o panic.o
 	${CC} init.c ${CCOPTS} -o init.o
+	${CC} exit.c ${CCOPTS} -o exit.o
 	${CC} trap.c ${CCOPTS} -o trap.o
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} kyb.c ${CCOPTS} -o kyb.o
@@ -41,7 +47,7 @@ gdb:compile
 	${OBJDUMP} -d -M att kernel.o > kernel.asm
 
 clean:
-	rm -f *.o kernel.asm KERNEL_SOURCE
+	rm -f *.o kernel.asm ${KERNEL_SOURCE}
 
 
 .PHONY: clean OBJS gdb all

@@ -8,7 +8,7 @@ LDOPTS = -m elf_i386 -N
 OBJCOPY = objcopy
 OBJDUMP = objdump
 BOOT = 	boot.o bootmain.o 
-BOOT_SOURCE = bootsource
+BOOT_SOURCE = boots.o
 
 #all strategy
 all:OBJS
@@ -16,7 +16,6 @@ all:OBJS
 	${CC} bootmain.c ${CCOPTS} -o bootmain.o  
 	${LD} ${LDOPTS} -e _start -o boots.o -Ttext=0x7c00 ${BOOT} 
 	$(OBJCOPY) -O binary boots.o boots.bin
-	rm -f boots.o
 # magic !!!
 gdb: CCOPTS += -g
 gdb: all
