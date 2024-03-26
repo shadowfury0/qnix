@@ -5,11 +5,13 @@ ENTRY(_start)
 SECTIONS
 {
 	. = 0x100000 + SIZEOF_HEADERS;
-	.text :{
+	/*. = 0x80100000 + SIZEOF_HEADERS;*/
+
+	.text : {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 	}
 
-	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
+	/*PROVIDE(etext = .);	 Define the 'etext' symbol to this value */
 
 	.rodata : {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
@@ -43,13 +45,13 @@ SECTIONS
 		*(.data)
 	}
 
-	PROVIDE(edata = .);
+	/*PROVIDE(edata = .);*/
 
 	.bss : {
 		*(.bss)
 	}
 
-	PROVIDE(end = .);
+	PROVIDE(kend = .);
 
 	/DISCARD/ : {
 		*(.eh_frame .note.GNU-stack)

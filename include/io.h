@@ -74,6 +74,12 @@ static inline void stihlt(void)
 }
 
 static inline void
+lcr3(uint val)
+{
+    asm volatile("movl %0,%%cr3" : : "r" (val));
+}
+
+static inline void
 lidt(struct gatedesc *p, int size)
 {
     volatile ushort idt[3];

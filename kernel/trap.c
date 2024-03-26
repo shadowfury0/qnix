@@ -4,6 +4,7 @@
 
 struct gatedesc* idts = (struct gatedesc*)IDT_ADDR;
 
+extern void do_other(void);
 extern void do_int0(void);
 extern void do_int1(void);
 extern void do_int2(void);
@@ -19,7 +20,7 @@ extern void do_int11(void);
 extern void do_int12(void);
 extern void do_int13(void);
 extern void do_int14(void);
-extern void do_int15(void);
+extern void do_int16(void);
 extern void keyboard_interrupt(void);
 
 // print interrupt error message and exit program
@@ -28,6 +29,12 @@ die(char* str)
 {
 	vprintf("divied zero error\n");
 	panic("interrupt error");
+}
+
+void
+reserve_error(void)
+{
+	die("reserve error\n");
 }
 
 void
@@ -152,7 +159,9 @@ init_idt(void)
    	SETGATE(idts[0xc],GT_INT,SEG_KCODE << 3,do_int12,0);
    	SETGATE(idts[0xd],GT_INT,SEG_KCODE << 3,do_int13,0);
    	SETGATE(idts[0xe],GT_INT,SEG_KCODE << 3,do_int14,0);
-   	SETGATE(idts[0xf],GT_INT,SEG_KCODE << 3,do_int15,0);
+	// keep this interrupt for bios
+   	SETGATE(idts[0xf],GT_INT,SEG_KCODE << 3,do_other,0);
+   	SETGATE(idts[0x10],GT_INT,SEG_KCODE << 3,do_int16,0);
 
    	SETGATE(idts[0x21],GT_INT,SEG_KCODE << 3,keyboard_interrupt,0);
 

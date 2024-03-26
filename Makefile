@@ -3,7 +3,7 @@
 MAGIC = $(shell ./magic.sh)
 QEMU = qemu-system-i386
 OS_IMG = qos.img
-QEMUOPTS = -nic none -drive file=${OS_IMG},index=0,media=disk,format=raw -m 128 -smp ${CPUS}
+QEMUOPTS = -nic none -drive file=${OS_IMG},index=0,media=disk,format=raw -m 512 -smp ${CPUS}
 CPUS = 1
 GDBPORT = 2500
 BOCHS	= 	bochs -f .bochsrc
@@ -52,6 +52,6 @@ debug:
 clean:
 	${MAKE} -C boot clean
 	${MAKE} -C kernel clean
-	rm -f *.tags *.log qos.img
+	rm -f *.tags *.log 
 
 .PHONY: clean img gdb all 

@@ -3,8 +3,8 @@
 .globl do_int0,do_int1,do_int2,do_int3
 .globl do_int4,do_int5,do_int6,do_int7
 .globl do_int8,do_int9,do_int10,do_int11
-.globl do_int12,do_int13,do_int14,do_int15
-.globl keyboard_interrupt
+.globl do_int12,do_int13,do_int14,do_int16
+.globl keyboard_interrupt,do_other
 
 do_int0:
     pushl   $divide_error
@@ -109,10 +109,13 @@ do_int14:
     pushl   $page_error
     jmp     no_error
 
-do_int15:
+do_int16:
     pushl   $coprocessor_error
     jmp     no_error
 
+do_other:
+    pushl   $reserve_error
+    jmp     no_error
 
 # int 0x21
 keyboard_interrupt:

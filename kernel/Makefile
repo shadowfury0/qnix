@@ -1,11 +1,14 @@
 .DEFAULT_GOAL := all
 OBJS = 	kernel.ld\
 		idt.S\
+		kmain.S\
 		panic.c\
+		kalloc.c\
 		init.c\
-		exit.c\
 		trap.c\
+		cpu.c\
 		kyb.c\
+		vm.c\
 		memory.c\
 		console.c\
 
@@ -16,33 +19,39 @@ KERNEL_SOURCE = kernelsource
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy
 OBJDUMP = objdump
-KERNEL	 =  panic.o\
+KERNEL	 =  kmain.o\
+			panic.o\
 			init.o\
-			exit.o\
+			kalloc.o\
 			idt.o\
 			trap.o\
 			kyb.o\
+			cpu.o\
 			memory.o\
 			console.o\
+			# vm.o			
 
 #all strategy
 compile:
 	${CC} idt.S ${CCOPTS} -o idt.o
+	${CC} kmain.S ${CCOPTS} -o kmain.o
 	${CC} panic.c ${CCOPTS} -o panic.o
+	${CC} kalloc.c ${CCOPTS} -o kalloc.o
 	${CC} init.c ${CCOPTS} -o init.o
-	${CC} exit.c ${CCOPTS} -o exit.o
 	${CC} trap.c ${CCOPTS} -o trap.o
+	${CC} vm.c ${CCOPTS} -o vm.o
+	${CC} cpu.c ${CCOPTS} -o cpu.o
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} kyb.c ${CCOPTS} -o kyb.o
 	${CC} console.c ${CCOPTS} -o console.o
 
 all:OBJS compile
-	${LD} ${LDOPTS} -T kernel.ld -e init -o kernel.o ${KERNEL}
+	${LD} ${LDOPTS} -T kernel.ld -e _start -o kernel.o ${KERNEL}
 
 # magic !!!
 gdb: CCOPTS += -g
 gdb:compile
-	${LD} ${LDOPTS} -T kernel.ld -e init -o ${KERNEL_SOURCE} ${KERNEL}
+	${LD} ${LDOPTS} -T kernel.ld -e _start -o ${KERNEL_SOURCE} ${KERNEL}
 	${OBJCOPY} --strip-debug ${KERNEL_SOURCE} kernel.o 
 	${OBJDUMP} -d -M att kernel.o > kernel.asm
 

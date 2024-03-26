@@ -7,7 +7,6 @@ _start:
 	movw    %ax,%es             # -> Extra Segment
 	movw    %ax,%ss             # -> Stack Segment
 
-
 #开启32位模式
 	lgdt    gdtdesc
 #跳转之前必须把中断关掉
@@ -25,8 +24,7 @@ start32:
 	movw    %ax, %ss                # -> SS: Stack Segment
 	movw    $0, %ax                 # Zero segments not ready for use
 	movw    %ax, %fs                # -> FS
-	movw    %ax, %gs                # -> GS
-
+	movw    %ax, %gs                # -> GS	 
 
 # 读取硬盘扇区的函数
 	call	bootmain
