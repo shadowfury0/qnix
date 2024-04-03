@@ -1,4 +1,4 @@
-#include "def.h"
+#include "types.h"
 #include "kyb.h"
 #include "io.h"
 #include "tty.h"

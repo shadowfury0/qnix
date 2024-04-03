@@ -1,4 +1,3 @@
-#include "type.h"
 // ELF32 头部结构体
 #define ELF32_MAGIC  0x464c457f
 

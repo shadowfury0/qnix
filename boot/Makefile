@@ -12,7 +12,7 @@ BOOT_SOURCE = boots.o
 
 #all strategy
 all:OBJS
-	${CC} boot.S ${CCOPTS} -o boot.o
+	${CC} boot.S ${CCOPTS} -D__ASSEMBLY__ -o boot.o
 	${CC} bootmain.c ${CCOPTS} -o bootmain.o  
 	${LD} ${LDOPTS} -e _start -o boots.o -Ttext=0x7c00 ${BOOT} 
 	$(OBJCOPY) -O binary boots.o boots.bin

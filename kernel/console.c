@@ -1,3 +1,4 @@
+#include "types.h"
 #include "io.h"
 
 #define CRTPORT 0x3d4

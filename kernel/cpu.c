@@ -1,4 +1,5 @@
-#include "type.h"
+#include "types.h"
+
 // cpuid 指令的函数封装
 void 
 cpuid(unsigned int op, unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx)

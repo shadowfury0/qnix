@@ -1,5 +1,5 @@
-#include "def.h"
-#include "idt.h"
+#include "types.h"
+#include "mmu.h"
 #include "io.h"
 
 struct gatedesc* idts = (struct gatedesc*)IDT_ADDR;
@@ -23,30 +23,22 @@ extern void do_int14(void);
 extern void do_int16(void);
 extern void keyboard_interrupt(void);
 
-// print interrupt error message and exit program
-void
-die(char* str)
-{
-	vprintf("divied zero error\n");
-	panic("interrupt error");
-}
-
 void
 reserve_error(void)
 {
-	die("reserve error\n");
+	panic("reserve error\n");
 }
 
 void
 divide_error(void)
 {
-	die("divied zero error\n");
+	panic("divied zero error\n");
 }
 
 void
 nmi_error(void)
 {
-	die("nmi error\n");
+	panic("nmi error\n");
 }
 
 void break_point(long * esp,
@@ -67,73 +59,73 @@ void break_point(long * esp,
 void
 overflow_error(void)
 {
-	die("overflow error\n");
+	panic("overflow error\n");
 }
 
 void
 bound_error(void)
 {
-	die("bound error\n");
+	panic("bound error\n");
 }
 
 void
 invalid_code(void)
 {
-	die("bound error\n");
+	panic("bound error\n");
 }
 
 void 
 device_not_available(void)
 {
-	die("maybe i dont know\n");
+	panic("maybe i dont know\n");
 }
 
 void
 double_fault(void)
 {
-	die("double fault\n");
+	panic("double fault\n");
 }
 
 void
 coprocessor_segment_overrun(void)
 {
-	die("coprocessor segment overrun\n");
+	panic("coprocessor segment overrun\n");
 }
 
 void
 invalid_tss(void)
 {
-	die("invalid tss\n");
+	panic("invalid tss\n");
 }
 
 void
 segment_not_present(void)
 {
-	die("segment not present\n");
+	panic("segment not present\n");
 }
 
 void
 stack_error(void)
 {
-	die("stack error\n");
+	panic("stack error\n");
 }
 
 void
 general_protection(void)
 {
-	die("general protection\n");
+	panic("general protection\n");
 }
 
 void
 page_error(void)
 {
-	die("page error\n");
+	panic("page error\n");
 }
 
 void
 coprocessor_error(void)
 {
-	die("coprocessor error\n");
+	panic("coprocessor error\n");
 }
 
 void
@@ -141,29 +133,29 @@ init_idt(void)
 {
 	int i;
     for (i=16;i<256;i++)
-       SETGATE(idts[i],GT_INT,SEG_KCODE << 3,0,0);
+       SETGATE(idts[i],SYS_INT,SEG_KCODE << 3,0,0);
 
 	// int 0 - int 15
-   	SETGATE(idts[0],GT_INT,SEG_KCODE << 3,do_int0,0);
-   	SETGATE(idts[1],GT_INT,SEG_KCODE << 3,do_int1,0);
-   	SETGATE(idts[2],GT_INT,SEG_KCODE << 3,do_int2,0);
-   	SETGATE(idts[3],GT_TRAP,SEG_KCODE << 3,do_int3,0);	/* 3 - 5 is trap gate */
-   	SETGATE(idts[4],GT_TRAP,SEG_KCODE << 3,do_int4,0);
-   	SETGATE(idts[5],GT_TRAP,SEG_KCODE << 3,do_int5,0);
-   	SETGATE(idts[6],GT_INT,SEG_KCODE << 3,do_int6,0);
-   	SETGATE(idts[7],GT_INT,SEG_KCODE << 3,do_int7,0);
-   	SETGATE(idts[8],GT_INT,SEG_KCODE << 3,do_int8,0);
-   	SETGATE(idts[9],GT_INT,SEG_KCODE << 3,do_int9,0);
-   	SETGATE(idts[0xa],GT_INT,SEG_KCODE << 3,do_int10,0);
-   	SETGATE(idts[0xb],GT_INT,SEG_KCODE << 3,do_int11,0);
-   	SETGATE(idts[0xc],GT_INT,SEG_KCODE << 3,do_int12,0);
-   	SETGATE(idts[0xd],GT_INT,SEG_KCODE << 3,do_int13,0);
-   	SETGATE(idts[0xe],GT_INT,SEG_KCODE << 3,do_int14,0);
+   	SETGATE(idts[0],SYS_INT,SEG_KCODE << 3,do_int0,0);
+   	SETGATE(idts[1],SYS_INT,SEG_KCODE << 3,do_int1,0);
+   	SETGATE(idts[2],SYS_INT,SEG_KCODE << 3,do_int2,0);
+   	SETGATE(idts[3],SYS_TRAP,SEG_KCODE << 3,do_int3,0);	/* 3 - 5 is trap gate */
+   	SETGATE(idts[4],SYS_TRAP,SEG_KCODE << 3,do_int4,0);
+   	SETGATE(idts[5],SYS_TRAP,SEG_KCODE << 3,do_int5,0);
+   	SETGATE(idts[6],SYS_INT,SEG_KCODE << 3,do_int6,0);
+   	SETGATE(idts[7],SYS_INT,SEG_KCODE << 3,do_int7,0);
+   	SETGATE(idts[8],SYS_INT,SEG_KCODE << 3,do_int8,0);
+   	SETGATE(idts[9],SYS_INT,SEG_KCODE << 3,do_int9,0);
+   	SETGATE(idts[0xa],SYS_INT,SEG_KCODE << 3,do_int10,0);
+   	SETGATE(idts[0xb],SYS_INT,SEG_KCODE << 3,do_int11,0);
+   	SETGATE(idts[0xc],SYS_INT,SEG_KCODE << 3,do_int12,0);
+   	SETGATE(idts[0xd],SYS_INT,SEG_KCODE << 3,do_int13,0);
+   	SETGATE(idts[0xe],SYS_INT,SEG_KCODE << 3,do_int14,0);
 	// keep this interrupt for bios
-   	SETGATE(idts[0xf],GT_INT,SEG_KCODE << 3,do_other,0);
-   	SETGATE(idts[0x10],GT_INT,SEG_KCODE << 3,do_int16,0);
+   	SETGATE(idts[0xf],SYS_INT,SEG_KCODE << 3,do_other,0);
+   	SETGATE(idts[0x10],SYS_INT,SEG_KCODE << 3,do_int16,0);
 
-   	SETGATE(idts[0x21],GT_INT,SEG_KCODE << 3,keyboard_interrupt,0);
+   	SETGATE(idts[0x21],SYS_INT,SEG_KCODE << 3,keyboard_interrupt,0);
 
     lidt(IDT_ADDR,IDT_SIZE);
 }

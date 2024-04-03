@@ -1,4 +1,4 @@
-#include "def.h"
+#include "mmu.h"
 
 .globl do_int0,do_int1,do_int2,do_int3
 .globl do_int4,do_int5,do_int6,do_int7

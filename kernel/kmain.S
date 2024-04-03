@@ -2,13 +2,15 @@
 
 .code32
 .globl _start
-_start:
+_start = V2PS(entry)
+.globl entry
+entry:
 # Turn on page size extension for 4Mbyte pages
     movl    %cr4, %eax
     orl     $(CR4_PSE), %eax
     movl    %eax, %cr4
 # Set page directory
-    movl    $(pgdir), %eax
+    movl    $(V2PS(pgdir)), %eax
     movl    %eax, %cr3
 # Turn on paging.
     movl    %cr0, %eax
@@ -16,6 +18,8 @@ _start:
     movl    %eax, %cr0
     movl    $(kstack+KSTACKSIZE),%esp
 
-    call    init
+# use virtual address
+    movl    $main,%eax
+    jmp     *%eax
 
 .comm kstack, KSTACKSIZE

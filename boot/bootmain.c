@@ -1,3 +1,4 @@
+#include "types.h"
 #include "io.h"
 #include "elf32.h"
 #define SECTSIZE  512

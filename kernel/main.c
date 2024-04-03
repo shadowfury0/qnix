@@ -1,3 +1,4 @@
+#include "types.h"
 #include "io.h"
 #include "tty.h"
 #include "mmu.h"
@@ -15,37 +16,34 @@ const char* welcome = "\
 ";
 
 void
-init_welcome()
+init_welcome(void)
 {
     vprintf(welcome);
     vgaputc('\n');
 }
 
 void 
-init() {
-    kminit(P2V(kend),P2V(4*1024*1024));
-    // kvmalloc();
+main(void) {
+    kminit(kend,P2V(4*1024*1024));
+    kvminit();
+    seginit();
+    proc_init();
 
     init_idt();
     init_pic();
-
     init_keyboard();
+
     init_welcome();
     cpuinfo();
     vprintf("loading...\n");
-    
-    sti();
-    for (;;) {
-        stihlt();
-        keyputc();
-        // asm volatile("int3");
-    }
+    user_init();
+    schedule();
 }
 
 __attribute__((__aligned__(PGSIZE)))
-uint pgdir[1024] = {
+int pgdir[PGTSIZE] = {
 // Map VA's [0, 4MB) to PA's [0, 4MB)
     [0] = (0) | PTE_P | PTE_W | PTE_PS,
 // Map VA's [KBASE, KBASE+4MB) to PA's [0, 4MB)
-    [KBASE>>PDSHIFT] = (0) | PTE_P | PTE_W | PTE_PS,
+    [KINDEX] = (0) | PTE_P | PTE_W | PTE_PS,
 };

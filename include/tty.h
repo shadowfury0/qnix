@@ -1,6 +1,4 @@
 // tty io cache
-#include "type.h"
-
 #define TTY_QB_SIZE  16  // must be 2^n
 
 // cache queue

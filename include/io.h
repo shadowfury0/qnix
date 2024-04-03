@@ -1,5 +1,3 @@
-#include "type.h"
-
 static inline uchar inb(ushort port)
 {
     uchar data;
@@ -80,6 +78,30 @@ lcr3(uint val)
 }
 
 static inline void
+lgdt(struct gatedesc *p, int size)
+{
+    volatile ushort gdt[3];
+
+    gdt[0] = size-1;
+    gdt[1] = (uint)p;
+    gdt[2] = (uint)p >> 16;
+
+    asm volatile("lgdt (%0)" : : "r" (gdt));
+}
+
+static inline void
+lldt(struct gatedesc *p, int size)
+{
+    volatile ushort ldt[3];
+
+    ldt[0] = size-1;
+    ldt[1] = (uint)p;
+    ldt[2] = (uint)p >> 16;
+
+    asm volatile("lldt (%0)" : : "r" (ldt));
+}
+
+static inline void
 lidt(struct gatedesc *p, int size)
 {
     volatile ushort idt[3];
@@ -89,4 +111,10 @@ lidt(struct gatedesc *p, int size)
     idt[2] = (uint)p >> 16;
 
     asm volatile("lidt (%0)" : : "r" (idt));
+}
+
+static inline void
+ltr(ushort s)
+{
+    asm volatile("ltr %0" :: "r" (s));
 }

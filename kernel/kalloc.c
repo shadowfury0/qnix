@@ -1,5 +1,6 @@
 // Physical memory allocator, intended to allocate
 // Kernel allocate memory allocates 4096-byte pages
+#include "types.h"
 #include "io.h"
 #include "mmu.h"
 
