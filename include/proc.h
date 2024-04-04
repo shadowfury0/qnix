@@ -36,7 +36,7 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 struct proc {
     volatile enum procstate state;                
     uint pid;
-    uint reip;  //return eip
+    // uint reip;  //return eip
     // char* stack;
     struct  proc*  parent;  
     // struct gatedesc* ldt;       // ldt address

@@ -32,7 +32,7 @@ main(void) {
     init_idt();
     init_pic();
     init_keyboard();
-
+    
     init_welcome();
     cpuinfo();
     vprintf("loading...\n");
