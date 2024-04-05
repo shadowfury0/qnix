@@ -8,17 +8,21 @@ extern void umain(void);
 
 extern struct segdesc* kgdt;
 
-// proc arrays
+// process arrays
 struct proc ptable[PT_SIZE];
 // first process
-static struct proc* curproc;
+volatile struct proc* curproc;
 //current pid
 static uint curpid;
+//current tss id;
+// static uint tssid;
 
 void
 proc_init(void)
 {
     curpid = 0;
+    curproc = 0;
+
     if (PT_SIZE * sizeof(struct segdesc) >  PGSIZE)
         panic("process table is larger than a page");
 
@@ -62,38 +66,26 @@ found:
 
     
     // load tss
-    // kgdt[SEG_FIRST] = SEG(SYS_TSS,&p->tss,0x68,0);
+    // kgdt[SEG_FIRST+tssid] = SEG(SYS_TSS,&p->tss,0x68,0);
     // ltr(SEG_FIRST);
 
     return p;
 }
 
-static inline void
-swtch(void)
-{
-    asm volatile(
-        // "leal 1f, %%eax; \n\t"
-        // "movl %%eax, %0; \n\t"
-        "movl %0,%%esp;\n\t"
-        "jmp *%1; \n\t"
-        // "1: \n\t"
-        // : "=m"(curproc->reip)
-        :: "m"(curproc->tss.esp),"m"(curproc->tss.eip)
-        : "%eax"
-    );
-}
-
 void 
 schedule(void)
 {
-    struct proc *p;
-    for (p = &ptable[PT_SIZE-1]; p >= ptable; p--) {
-        if (p->state == RUNNABLE)
-        {
-            p->state = RUNNING;
+    volatile struct proc *p;
+
+    for(;;) {
+        for (p = ptable; p < &ptable[PT_SIZE]; p++) {
+            if (p->state != RUNNABLE) {
+                continue;
+            }
+            // switch cur process
             curproc = p;
-            swtch();
-            break;
+            p->state = RUNNING;
+            swtch(&p->tss);
         }
     }
 
@@ -107,7 +99,6 @@ user_init(void)
         panic("user init error");
 
     // is the first process need point itself
-    p->parent = curproc;
     p->tss.eip  = (uint)umain;
     curproc = p;
     p->parent = p;
@@ -116,29 +107,19 @@ user_init(void)
 
 }
 
-void exit(void);
-
-void
-hello(void)
-{
-    vprintf("hello\n");
-    exit();
-}
-
-// tmp is error
 int
-fork(void)
+fork1(uint eip)
 {
     struct proc* cp;
 
     if((cp = allocproc()) == 0)
-        return 1;
+        return -1;
 
     cp->parent = curproc;
     cp->state = RUNNABLE;
-    cp->tss.eip = (uint)hello;
+    cp->tss.eip = eip;
+    cp->tss.eax = 0;
 
-    // schedule();
     return cp->pid;
 }
 
@@ -161,14 +142,10 @@ kill(uint pid)
 void
 exit(void)
 {
-    if (curproc->parent == curproc) 
-        panic("init exiting");
-
+    // if (curproc->parent == curproc) 
+        // panic("init exiting");
     curproc->state = ZOMBIE;
-    schedule();
-    // asm volatile(
-    //     "jmp  *%0;\n\t"
-    //     ::"m"(curproc->reip));
+    swtch(&curproc->tss);
 }
 
 void

@@ -4,8 +4,8 @@
 #define PT_SIZE         16
 
 struct tss {
-    uint link;
-    uint _unused1;
+    ushort link;
+    ushort _unused1;
     uint esp0;
     ushort ss0;
     ushort _unused2;

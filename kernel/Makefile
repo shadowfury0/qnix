@@ -10,6 +10,7 @@ OBJS = 	kernel.ld\
 		memory.c\
 		panic.c\
 		proc.c\
+		swtch.S\
 		trap.c\
 		usr.c\
 		vm.c\
@@ -31,6 +32,7 @@ KERNEL	 =  console.o\
 			memory.o\
 			panic.o\
 			proc.o\
+			swtch.o\
 			trap.o\
 			usr.o\
 			vm.o\
@@ -48,6 +50,7 @@ compile:
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} panic.c ${CCOPTS} -o panic.o
 	${CC} proc.c ${CCOPTS} -o proc.o
+	${CC} swtch.S ${CCOPTS} -o swtch.o
 	${CC} trap.c ${CCOPTS} -o trap.o
 	${CC} usr.c ${CCOPTS} -o usr.o
 	${CC} vm.c ${CCOPTS} -o vm.o
