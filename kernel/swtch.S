@@ -1,4 +1,4 @@
-.globl swtch,fork,wait
+.globl swtch,fork,wait,yield
 
 # switch the eip register with the first address
 swtch:
@@ -29,7 +29,16 @@ fork:
     ret
 
 wait:
-    pushl   (%esp)
+    pushl   %esp
+    pushl   4(%esp)
+    pushl   %eax
     call    wait1
-    
-    ret
+    addl    $0x10,%esp
+    jmp     schedule
+yield:
+    pushl   %esp
+    pushl   4(%esp)
+    pushl   %eax
+    call    yield1
+    addl    $0x10,%esp
+    jmp     schedule

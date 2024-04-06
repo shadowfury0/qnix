@@ -22,7 +22,11 @@ schedule(void)
 
     for(;;) {
         for (p = ptable; p < &ptable[PT_SIZE]; p++) {
-            if (p->state != RUNNABLE)
+            if (p->state == EMBRYO) {
+                p->state = RUNNABLE;
+                continue;
+            }
+            else if (p->state != RUNNABLE)
                 continue;
             // switch cur process
             curproc = p;
@@ -110,14 +114,13 @@ fork1(uint eip,uint esp)
     if((cp = allocproc()) == 0)
         return -1;
 
-    cp->parent = curproc;
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
-    char* src = (char*)curproc->tss.esp - PGSIZE;
-    char* dst = (char*)cp->tss.esp - PGSIZE;
+    char* src = (char*)PGROUNDUP(curproc->tss.esp - PGSIZE);
+    char* dst = (char*)PGROUNDUP(cp->tss.esp - PGSIZE);
     memmove(dst,src,PGSIZE);
     cp->tss.eax = 0;
-    cp->tss.esp -= (curproc->tss.esp - esp);
+    cp->tss.esp -= (curproc->tss.esp - esp - 4);
 
     return cp->pid;
 }
@@ -139,58 +142,65 @@ kill(uint pid)
 }
 
 void
-exit(void)
+wakeup(struct proc* w)
 {
-    // if (curproc->parent == curproc) 
-        // panic("init exiting");
-
-    curproc->tss.eip = &schedule;
-    curproc->state = ZOMBIE;
-    swtch(&curproc->tss);
+    if (w->state == SLEEPING)
+        w->state = RUNNABLE;
 }
 
-int
-wait1(uint eip)
+void
+exit(void)
 {
+    struct proc* p = curproc;
+    if (p->parent == curproc)
+        panic("init exiting");
+
+    // parent wake up
+    wakeup(p->parent);
+
+    // clean up process
+    // if (p->state == ZOMBIE) {
+    //     p->parent->state = RUNNABLE;
+    //     // clear stack
+    //     kfree(PGROUNDUP(p->tss.esp-PGSIZE));
+    //     p->state = UNUSED;
+    //     p->parent = 0;
+    //     p->pid = 0;
+    // }
+
+    p->tss.eip = &schedule;
+    p->state = ZOMBIE;
+    swtch(&p->tss);
+}
+
+void
+wait1(uint eax,uint eip,uint esp)
+{
+    if (curproc == 0)
+        panic("sleep");
+    
     volatile struct proc* p;
     for (p = ptable; p < &ptable[PT_SIZE]; p++) {
         if (p->parent != curproc || curproc == p)
             continue;
         
-        // child process quit
-        if (p->state == ZOMBIE) {
-            p->parent->state = RUNNABLE;
-            // clear stack
-            kfree(PGROUNDUP(p->tss.esp-PGSIZE));
-            p->state = UNUSED;
-            p->parent = 0;
-            p->pid = 0;
-            return p->pid;
-        }
-
-        //sleep current process
-        asm volatile("addl $0x0c,%esp");
-        p->parent->tss.eip = eip;
-        sleep();
-        swtch(&p->tss);
+        // sleep cur process
+        curproc->state = SLEEPING;
+        curproc->tss.eip = eip;
+        // call ip need add 4
+        curproc->tss.esp = esp+4;
+        curproc->tss.eax = eax;
+        break;
     }
 }
 
 void
-sleep()
-{
-    struct proc* p = curproc;
-
-    if (p == 0)
-        panic("sleep");
-    
-    p->state = SLEEPING;
-}
-
-void
-yield(void){
-    
-    schedule();
+yield1(uint eax,uint eip,uint esp){
+    curproc->state = EMBRYO;
+    curproc->tss.eip = eip;
+    // call ip need add 4
+    curproc->tss.esp = esp+4;
+    curproc->tss.eax = eax;
 }
 
 void
