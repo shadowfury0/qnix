@@ -1,4 +1,5 @@
-.globl swtch,fork
+.globl swtch,fork,wait
+
 # switch the eip register with the first address
 swtch:
     movl    (%esp), %eax
@@ -6,7 +7,7 @@ swtch:
     addl    $8,%esp
 
 # esp
-    xchg    0x38(%edx),%esp
+    movl    0x38(%edx),%esp
 # eip
     pushl   0x20(%edx)
     movl    %eax,0x20(%edx)
@@ -17,6 +18,18 @@ swtch:
 
 #   put cur eip into first argument
 fork:
-    pushl   (%esp)
+#   esp
+    pushl   %esp
+#   eip
+    pushl   4(%esp)
+
     call    fork1
+# clean the stack
+    addl    $8,%esp
+    ret
+
+wait:
+    pushl   (%esp)
+    call    wait1
+    
     ret

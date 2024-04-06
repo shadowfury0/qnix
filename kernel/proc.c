@@ -14,8 +14,23 @@ struct proc ptable[PT_SIZE];
 volatile struct proc* curproc;
 //current pid
 static uint curpid;
-//current tss id;
-// static uint tssid;
+
+void 
+schedule(void)
+{
+    volatile struct proc *p;
+
+    for(;;) {
+        for (p = ptable; p < &ptable[PT_SIZE]; p++) {
+            if (p->state != RUNNABLE)
+                continue;
+            // switch cur process
+            curproc = p;
+            p->state = RUNNING;
+            swtch(&p->tss);
+        }
+    }
+}
 
 void
 proc_init(void)
@@ -30,6 +45,7 @@ proc_init(void)
     for (i = 3;i<PT_SIZE;i++) {
         kgdt[i] = SEG(0,0,0,0);
     }
+
 }
 
 struct proc*
@@ -63,32 +79,12 @@ found:
     p->tss.fs   = SEG_KDATA << 3;
     p->tss.ss   = SEG_KDATA << 3;
     p->tss.gs   = SEG_KDATA << 3;
-
     
     // load tss
     // kgdt[SEG_FIRST+tssid] = SEG(SYS_TSS,&p->tss,0x68,0);
     // ltr(SEG_FIRST);
 
     return p;
-}
-
-void 
-schedule(void)
-{
-    volatile struct proc *p;
-
-    for(;;) {
-        for (p = ptable; p < &ptable[PT_SIZE]; p++) {
-            if (p->state != RUNNABLE) {
-                continue;
-            }
-            // switch cur process
-            curproc = p;
-            p->state = RUNNING;
-            swtch(&p->tss);
-        }
-    }
-
 }
 
 void
@@ -99,16 +95,15 @@ user_init(void)
         panic("user init error");
 
     // is the first process need point itself
-    p->tss.eip  = (uint)umain;
+    p->tss.eip  = &umain;
     curproc = p;
     p->parent = p;
 
     p->state = RUNNABLE;
-
 }
 
 int
-fork1(uint eip)
+fork1(uint eip,uint esp)
 {
     struct proc* cp;
 
@@ -118,7 +113,11 @@ fork1(uint eip)
     cp->parent = curproc;
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
+    char* src = (char*)curproc->tss.esp - PGSIZE;
+    char* dst = (char*)cp->tss.esp - PGSIZE;
+    memmove(dst,src,PGSIZE);
     cp->tss.eax = 0;
+    cp->tss.esp -= (curproc->tss.esp - esp);
 
     return cp->pid;
 }
@@ -144,14 +143,54 @@ exit(void)
 {
     // if (curproc->parent == curproc) 
         // panic("init exiting");
+
+    curproc->tss.eip = &schedule;
     curproc->state = ZOMBIE;
     swtch(&curproc->tss);
 }
 
-void
-sys_getpid(void)
+int
+wait1(uint eip)
 {
-    return curproc->pid;
+    volatile struct proc* p;
+    for (p = ptable; p < &ptable[PT_SIZE]; p++) {
+        if (p->parent != curproc || curproc == p)
+            continue;
+        
+        // child process quit
+        if (p->state == ZOMBIE) {
+            p->parent->state = RUNNABLE;
+            // clear stack
+            kfree(PGROUNDUP(p->tss.esp-PGSIZE));
+            p->state = UNUSED;
+            p->parent = 0;
+            p->pid = 0;
+            return p->pid;
+        }
+
+        //sleep current process
+        asm volatile("addl $0x0c,%esp");
+        p->parent->tss.eip = eip;
+        sleep();
+        swtch(&p->tss);
+    }
+}
+
+void
+sleep()
+{
+    struct proc* p = curproc;
+
+    if (p == 0)
+        panic("sleep");
+    
+    p->state = SLEEPING;
+}
+
+void
+yield(void){
+    
+    schedule();
 }
 
 void

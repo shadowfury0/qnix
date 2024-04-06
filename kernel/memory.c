@@ -31,3 +31,9 @@ memset(void *dst, int c, uint n)
         stosb(dst,c,n);
     return dst;
 }
+
+void
+memcpy(void *dst,const void *src,uint n)
+{
+    return memmove(dst,src,n);
+}

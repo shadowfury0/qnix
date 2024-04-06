@@ -88,7 +88,7 @@ struct segdesc {
 #define CR4_PSE         0x00000010      // Page size extension
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
-#define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
+#define PGROUNDDOWN(sz) (((sz)) & ~(PGSIZE-1))
 
 // may be 224 M is enough total 512 M , but point to virtual memory
 #define PHYSTOP         0xE000000       // Top physical memory
