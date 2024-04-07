@@ -87,10 +87,12 @@ init_keyboard(void)
 void
 keygetc(void)
 {
+	cli();
 	if (!TTY_Q_FULL(q))
     	TTY_Q_PUT(q,inb(KB_DATAP));
-
+	// keyputc();
     piceoi();
+	sti();
 }
 
 // key command put to console
@@ -99,7 +101,6 @@ keyputc(void)
 {
 	uchar val;
 	if (!TTY_Q_EMPTY(q)) {
-		cli();
 		TTY_Q_GET(q,val);
 
 		// determine shift key is pressed
@@ -112,7 +113,7 @@ keyputc(void)
 		else if (val == 0x38) alt_pressed = true;
 		else if (val == 0xb8) alt_pressed = false;
 
-		if ( val < sizeof(key_table) ) {
+		if (val < sizeof(key_table)) {
 			if (shift_pressed) val=shift_table[val];
 			else val=key_table[val];
 

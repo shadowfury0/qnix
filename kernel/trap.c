@@ -1,5 +1,6 @@
 #include "types.h"
 #include "mmu.h"
+#include "idt.h"
 #include "io.h"
 
 struct gatedesc* idts = (struct gatedesc*)IDT_ADDR;
@@ -22,6 +23,7 @@ extern void do_int13(void);
 extern void do_int14(void);
 extern void do_int16(void);
 extern void keyboard_interrupt(void);
+extern void rtc_interrupt(void);
 
 void
 reserve_error(void)
@@ -156,6 +158,7 @@ init_idt(void)
    	SETGATE(idts[0x10],SYS_INT,SEG_KCODE << 3,do_int16,0);
 
    	SETGATE(idts[0x21],SYS_INT,SEG_KCODE << 3,keyboard_interrupt,0);
+	SETGATE(idts[0x28],SYS_INT,SEG_KCODE<<3,rtc_interrupt,0);
 
     lidt(IDT_ADDR,IDT_SIZE);
 }
@@ -163,21 +166,24 @@ init_idt(void)
 void
 init_pic(void)
 {	
-    outb(PIC_M_CTRL,0x11);    /* 边缘触发模式（edge trigger mode） */
-	outb(PIC_M_DATA,0x20);    /* IRQ0-7由INT20-27接收 */
-	outb(PIC_M_DATA,1 << 2);  /* PIC1由IRQ2相连 */
-	outb(PIC_M_DATA,0x01);    /* 无缓冲区模式 */
+    outb(PIC_M_CTRL,0x11);    /* Edge trigger mode */
+	outb(PIC_M_DATA,0x20);    /* IRQ0-7 mapped to INT20-27 */
+	outb(PIC_M_DATA,1 << 2);  /* Connect PIC1 to IRQ2 */
+	outb(PIC_M_DATA,0x01);    /* No buffer mode */
 
-	outb(PIC_S_CTRL,0x11); 	 /* 边缘触发模式（edge trigger mode） */
-	outb(PIC_S_DATA,0x28); 	 /* IRQ8-15由INT28-2f接收 */
-	outb(PIC_S_DATA,2);    	 /* PIC1由IRQ2连接 */
-	outb(PIC_S_DATA,0x01); 	 /* 无缓冲区模式 */
+	outb(PIC_S_CTRL,0x11); 	  /* Edge trigger mode */
+	outb(PIC_S_DATA,0x28); 	  /* IRQ8-15 mapped to INT28-2F */
+	outb(PIC_S_DATA,2);    	  /* Connect PIC1 to IRQ2 */
+	outb(PIC_S_DATA,0x01); 	  /* No buffer mode */
 
 	// forbidden all interrupt
 	outb(PIC_M_DATA,0xff); 
 	outb(PIC_S_DATA,0xff);
 
-	outb(PIC_M_DATA,0xf9);     /* 开放PIC1和键盘中断(11111001) */
+	/* init keyboard interrupt */
+	outb(PIC_M_DATA,0xf9);
+	/* init timer interrupt */
+	outb(PIC_S_DATA,0xfe);
 }
 
 // 暂时放在这里

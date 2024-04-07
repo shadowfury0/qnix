@@ -13,6 +13,10 @@ swtch:
     movl    %eax,0x20(%edx)
 # eax
     movl    0x28(%edx),%eax
+# esi
+    movl    0x40(%edx),%edi
+# edi 
+    movl    0x44(%edx),%esi
 
     ret
 
@@ -26,6 +30,7 @@ fork:
     call    fork1
 # clean the stack
     addl    $8,%esp
+
     ret
 
 wait:
@@ -39,6 +44,9 @@ yield:
     pushl   %esp
     pushl   4(%esp)
     pushl   %eax
+#    pushl   %esi
+#    pushl   %edi
     call    yield1
     addl    $0x10,%esp
+#    addl    $0x18,%esp
     jmp     schedule

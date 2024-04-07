@@ -33,6 +33,18 @@ schedule(void)
             p->state = RUNNING;
             swtch(&p->tss);
         }
+
+        // clean the process
+        for (p = ptable; p < &ptable[PT_SIZE]; p++) {
+            if (p->state != ZOMBIE) 
+                continue;
+            p->parent->state = RUNNABLE;
+            // clear stack
+            kfree(PGROUNDUP(p->tss.esp-PGSIZE));
+            p->state = UNUSED;
+            p->parent = 0;
+            p->pid = 0;
+        }
     }
 }
 
@@ -158,16 +170,6 @@ exit(void)
     // parent wake up
     wakeup(p->parent);
 
-    // clean up process
-    // if (p->state == ZOMBIE) {
-    //     p->parent->state = RUNNABLE;
-    //     // clear stack
-    //     kfree(PGROUNDUP(p->tss.esp-PGSIZE));
-    //     p->state = UNUSED;
-    //     p->parent = 0;
-    //     p->pid = 0;
-    // }
-
     p->tss.eip = &schedule;
     p->state = ZOMBIE;
     swtch(&p->tss);
@@ -195,11 +197,15 @@ wait1(uint eax,uint eip,uint esp)
 }
 
 void
-yield1(uint eax,uint eip,uint esp){
+yield1(uint eax,uint eip,uint esp)
+{
     curproc->state = EMBRYO;
     curproc->tss.eip = eip;
     // call ip need add 4
     curproc->tss.esp = esp+4;
+    // curproc->tss.edi = edi;
+    // curproc->tss.esi = esi;
+
     curproc->tss.eax = eax;
 }
 
@@ -233,4 +239,10 @@ procdump(void)
         // }
         // vprintf("\n");
     }
+}
+
+int
+getpid(void)
+{
+    return curproc->pid;
 }

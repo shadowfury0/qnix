@@ -8,7 +8,8 @@ static ushort *crt = (ushort*)0xb8000;
 // static int pos = 0;
 
 void 
-vgaputc(uchar c) {
+vgaputc(uchar c) 
+{
     int pos = 0;
     outb(CRTPORT,14);
     //256 一行
@@ -46,7 +47,8 @@ vgaputc(uchar c) {
 
 //base 几进制
 void 
-printint(int num,int base) {
+printint(int num,int base) 
+{
     static char digits[] = "0123456789abcdef";
     //最大16进制长度数
     char bufn[16];
@@ -60,7 +62,8 @@ printint(int num,int base) {
 
 // modify later
 void
-vprintf(char* str,...) {
+vprintf(char* str,...) 
+{
     if (str == 0)
         return;
 

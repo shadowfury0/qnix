@@ -1,11 +1,14 @@
 .DEFAULT_GOAL := all
 INDS = 	elf32.h\
+		idt.h\
 		io.h\
 		kyb.h\
 		mmu.h\
-		tty.h\
 		type.h\
 		proc.h\
+		rtc.h\
+		tty.h\
+		types.h\
 
 all:INDS
 

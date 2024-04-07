@@ -1,7 +1,7 @@
 #define TASK_NAME_LEN   16
 
 //process table size
-#define PT_SIZE         16
+#define PT_SIZE         5
 
 struct tss {
     ushort link;
@@ -36,10 +36,8 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 struct proc {
     volatile enum procstate state;                
     uint pid;
-    // uint reip;  //return eip
-    // char* stack;
     struct  proc*  parent;  
     // struct gatedesc* ldt;       // ldt address
-    // char comm[TASK_NAME_LEN];
     struct tss tss;
+    // char comm[TASK_NAME_LEN];
 };

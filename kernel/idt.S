@@ -4,7 +4,7 @@
 .globl do_int4,do_int5,do_int6,do_int7
 .globl do_int8,do_int9,do_int10,do_int11
 .globl do_int12,do_int13,do_int14,do_int16
-.globl keyboard_interrupt,do_other
+.globl keyboard_interrupt,rtc_interrupt,do_other
 
 do_int0:
     pushl   $divide_error
@@ -120,4 +120,9 @@ do_other:
 # int 0x21
 keyboard_interrupt:
     pushl   $keygetc
+    jmp     no_error
+
+# int 0x28
+rtc_interrupt:
+    pushl   $rtctrap
     jmp     no_error

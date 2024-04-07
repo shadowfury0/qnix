@@ -23,7 +23,8 @@ init_welcome(void)
 }
 
 void 
-main(void) {
+main(void) 
+{
     kminit(kend,P2V(4*1024*1024));
     kvminit();
     seginit();
@@ -32,11 +33,14 @@ main(void) {
     init_idt();
     init_pic();
     init_keyboard();
+    init_rtc();
     
     init_welcome();
     cpuinfo();
     vprintf("loading...\n");
     user_init();
+    
+    sti();
     schedule();
 }
 

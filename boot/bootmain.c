@@ -60,7 +60,8 @@ readseg(uchar* s, uint c, uint offset)
 // }
 
 void 
-bootmain() {
+bootmain() 
+{
     struct elf32_hdr* elf;
     void(*entry)();
     elf = (struct elf32_hdr*)0x100000;

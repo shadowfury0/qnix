@@ -2,6 +2,7 @@
 #include "io.h"
 
 extern void exit(void);
+
 void
 kk(void)
 {
@@ -12,6 +13,7 @@ kk(void)
     }
     if (pid >0) {
         vprintf("--------------%d \n",pid);
+        // wait();
     }
     else {
         vprintf("==============\n");
@@ -20,26 +22,30 @@ kk(void)
 }
 
 void
-umain(void){
+umain(void)
+{
     // vprintf("enter user space\n");
-    int n;
-    volatile int pid;
+    // int n;
     // for(n=0; n<4; n++){
     //     kk();
     // }
-    // yield();
-
-    // pid = fork();
+    volatile int pid;
+    pid = fork();
     
-    // if (pid > 0) {
-    //     vprintf("--------------\n");
-    //     yield();
-    //     vprintf("xxxxxxxxxxxxxx\n");
-    // }
-    // else {
-    //     vprintf("aaaaaaaaaaaaaaa\n");
-    //     exit();
-    // }
+    if (pid > 0) {
+        for(;;) {
+            stihlt();
+            // printdate();
+	        keyputc();
+        }
+    }
+    else {
+        for(;;) {
+            stihlt();
+            printdate();
+	        keyputc();
+        }
+    }
 
     for(;;)
         ;
