@@ -9,6 +9,7 @@ INDS = 	elf32.h\
 		rtc.h\
 		tty.h\
 		types.h\
+		usr.h\
 
 all:INDS
 

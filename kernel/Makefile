@@ -2,6 +2,7 @@
 OBJS = 	kernel.ld\
 		console.c\
 		cpu.c\
+		exec.c\
 		idt.S\
 		main.c\
 		kalloc.c\
@@ -25,6 +26,7 @@ OBJCOPY = objcopy
 OBJDUMP = objdump
 KERNEL	 =  console.o\
 			cpu.o\
+			exec.o\
 			idt.o\
 			main.o\
 			kalloc.o\
@@ -44,6 +46,7 @@ KERNEL	 =  console.o\
 compile:
 	${CC} console.c ${CCOPTS} -o console.o
 	${CC} cpu.c ${CCOPTS} -o cpu.o
+	${CC} exec.c ${CCOPTS} -o exec.o
 	${CC} idt.S ${CCOPTS} -D__ASSEMBLY__ -o idt.o
 	${CC} main.c ${CCOPTS} -o main.o
 	${CC} kalloc.c ${CCOPTS} -o kalloc.o

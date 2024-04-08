@@ -39,7 +39,6 @@ main(void)
     cpuinfo();
     vprintf("loading...\n");
     user_init();
-    
     sti();
     schedule();
 }

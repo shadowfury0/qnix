@@ -1,7 +1,6 @@
 #include "types.h"
 #include "io.h"
-
-extern void exit(void);
+#include "usr.h"
 
 void
 kk(void)
@@ -12,42 +11,45 @@ kk(void)
         return;
     }
     if (pid >0) {
-        vprintf("--------------%d \n",pid);
-        // wait();
+        for (;;)
+        {
+            vprintf("fahter running\n");
+            sleep(2);
+            printdate();
+        }
     }
     else {
-        vprintf("==============\n");
-        exit();
+        for (;;)
+        {
+            vprintf("child running\n");
+            sleep(2);
+        }
+        // exit();
     }
 }
+
+char *argv[] = { "sh", 0 };
 
 void
 umain(void)
 {
-    // vprintf("enter user space\n");
-    // int n;
-    // for(n=0; n<4; n++){
-    //     kk();
-    // }
     volatile int pid;
-    pid = fork();
-    
-    if (pid > 0) {
-        for(;;) {
-            stihlt();
-            // printdate();
-	        keyputc();
+    int upid;
+    for (;;) {
+        vprintf("user init: starting sh\n");
+        pid = fork();
+        if (pid < 0) {
+            vprintf("user init error\n");
+            exit();
         }
-    }
-    else {
-        for(;;) {
-            stihlt();
-            printdate();
-	        keyputc();
+        else if (pid == 0) {
+            exec("sh",argv);
+            vprintf("init sh failed\n");
+            exit();
         }
+        for (;;)
+            if ((upid = wait())) vprintf("pid:%d zombie!\n",upid);
     }
 
-    for(;;)
-        ;
     exit();
 }

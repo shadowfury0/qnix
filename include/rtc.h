@@ -26,5 +26,5 @@ struct timer {
     uchar   day;
     uchar   month;
     ushort  year;
-    uint    tick;
+    volatile    uint    tick;
 };

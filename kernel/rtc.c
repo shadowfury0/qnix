@@ -82,7 +82,16 @@ rtctrap(void)
     rtc_date();
     rtc_dump();
     piceoi();
+
+    sti();
     yield();
+}
+
+volatile void
+sleep(uint t)
+{
+    uint l = t_clock.tick;
+    while ((t + l) > t_clock.tick);
 }
 
 void

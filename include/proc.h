@@ -1,7 +1,7 @@
 #define TASK_NAME_LEN   16
 
 //process table size
-#define PT_SIZE         5
+#define PT_SIZE         8
 
 struct tss {
     ushort link;

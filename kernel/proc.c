@@ -119,7 +119,7 @@ user_init(void)
 }
 
 int
-fork1(uint eip,uint esp)
+fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
 {
     struct proc* cp;
 
@@ -133,6 +133,12 @@ fork1(uint eip,uint esp)
     memmove(dst,src,PGSIZE);
     cp->tss.eax = 0;
     cp->tss.esp -= (curproc->tss.esp - esp - 4);
+    cp->tss.ecx = ecx;
+    cp->tss.edx = edx;
+    cp->tss.ebx = ebx;
+    cp->tss.ebp = ebp;
+    cp->tss.esi = esi;
+    cp->tss.edi = edi;
 
     return cp->pid;
 }
@@ -175,8 +181,8 @@ exit(void)
     swtch(&p->tss);
 }
 
-void
-wait1(uint eax,uint eip,uint esp)
+int
+wait1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,uint esp)
 {
     if (curproc == 0)
         panic("sleep");
@@ -192,21 +198,33 @@ wait1(uint eax,uint eip,uint esp)
         // call ip need add 4
         curproc->tss.esp = esp+4;
         curproc->tss.eax = eax;
-        break;
+        curproc->tss.ecx = ecx;
+        curproc->tss.edx = edx;
+        curproc->tss.ebx = ebx;
+
+        curproc->tss.ebp = ebp;
+        curproc->tss.edi = edi;
+        curproc->tss.esi = esi;
+        return p->pid;
     }
+    return 0;
 }
 
 void
-yield1(uint eax,uint eip,uint esp)
+yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,uint esp)
 {
     curproc->state = EMBRYO;
     curproc->tss.eip = eip;
     // call ip need add 4
     curproc->tss.esp = esp+4;
-    // curproc->tss.edi = edi;
-    // curproc->tss.esi = esi;
+    curproc->tss.ebp = ebp;
+    curproc->tss.edi = edi;
+    curproc->tss.esi = esi;
 
     curproc->tss.eax = eax;
+    curproc->tss.ecx = ecx;
+    curproc->tss.edx = edx;
+    curproc->tss.ebx = ebx;
 }
 
 void
