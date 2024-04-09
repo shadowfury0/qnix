@@ -5,7 +5,7 @@ ENTRY(_start)
 SECTIONS
 {
 	/*. = 0x100000 + SIZEOF_HEADERS;*/
-	. = 0x80100000 + SIZEOF_HEADERS;
+	. = 0xc0100000 + SIZEOF_HEADERS;
 
 	.text :{
 		*(.text .stub .text.* .gnu.linkonce.t.*)

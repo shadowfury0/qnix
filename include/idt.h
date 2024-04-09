@@ -9,3 +9,4 @@
 
 
 #define PIC_EOI         0x20
+#define T_SYSCALL       0x80

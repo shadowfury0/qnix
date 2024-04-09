@@ -67,7 +67,7 @@ bootmain()
     elf = (struct elf32_hdr*)0x100000;
 
     //一次性读满
-    readseg((uchar*)elf, 20480, 0);
+    readseg((uchar*)elf, 30720, 0);
     if ( elf->e_magic != ELF32_MAGIC ) 
         return;
 

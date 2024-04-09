@@ -7,6 +7,7 @@ INDS = 	elf32.h\
 		type.h\
 		proc.h\
 		rtc.h\
+		syscall.h\
 		tty.h\
 		types.h\
 		usr.h\

@@ -13,12 +13,14 @@ OBJS = 	kernel.ld\
 		proc.c\
 		rtc.c\
 		swtch.S\
+		syscall.c\
+		sysproc.c\
 		trap.c\
-		usr.c\
+		umain.S\
 		vm.c\
 
 CC = gcc
-CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../include -c -m32  -w
+CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../include  -c -m32  -w
 LD = ld
 KERNEL_SOURCE = kernelsource
 LDOPTS = -m elf_i386 -N 
@@ -37,8 +39,10 @@ KERNEL	 =  console.o\
 			proc.o\
 			rtc.o\
 			swtch.o\
+			syscall.o\
+			sysproc.o\
 			trap.o\
-			usr.o\
+			umain.o\
 			vm.o\
 
 
@@ -57,8 +61,10 @@ compile:
 	${CC} proc.c ${CCOPTS} -o proc.o
 	${CC} rtc.c ${CCOPTS} -o rtc.o
 	${CC} swtch.S ${CCOPTS} -o swtch.o
+	${CC} syscall.c ${CCOPTS} -o syscall.o
+	${CC} sysproc.c ${CCOPTS} -o sysproc.o
 	${CC} trap.c ${CCOPTS} -o trap.o
-	${CC} usr.c ${CCOPTS} -o usr.o
+	${CC} umain.S ${CCOPTS} -D__ASSEMBLY__ -o umain.o
 	${CC} vm.c ${CCOPTS} -o vm.o
 
 all:OBJS compile
@@ -66,7 +72,7 @@ all:OBJS compile
 
 # magic !!!
 gdb: CCOPTS += -g
-gdb:compile
+gdb:OBJS compile
 	${LD} ${LDOPTS} -T kernel.ld -e _start -o ${KERNEL_SOURCE} ${KERNEL}
 	${OBJCOPY} --strip-debug ${KERNEL_SOURCE} kernel.o 
 	${OBJDUMP} -d -M att kernel.o > kernel.asm

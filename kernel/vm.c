@@ -80,33 +80,38 @@ mappages(int *pgdir, void *va, uint pa,uint size, int perm)
     return 0;
 }
 
-void
-kvminit(void)
+int*
+setupkvm(void)
 {
-    int i;
-    int ps;
-    int*  kpgdir;
-    if ((kpgdir = (int*)kalloc()) == 0)
+    int* pgdir;
+    if ((pgdir = (int*)kalloc()) == 0)
         return 0;
 
-    memset(kpgdir,0,PGSIZE);
+    memset(pgdir,0,PGSIZE);
     if (P2V(PHYSTOP) > (void*)DEVSPACE)
         panic("kernel start is too high");
     
     // first page
-    if(mappages(kpgdir,0,0,P4MSIZE,PTE_W) || mappages(kpgdir,KBASE,0,P4MSIZE,PTE_W))   {
+    if(mappages(pgdir,0,0,P4MSIZE,PTE_W)||mappages(pgdir,KBASE,0,P4MSIZE,PTE_W))   {
         panic("kernel page init error");
     }
+    return pgdir;
+}
+
+void
+kvminit(void)
+{
+    kpgdir = setupkvm();
     // load cr3
     lcr3(V2P(kpgdir));
-
     // other pages
+    int i;
+    int ps;
     for (i=1;i<KPSIZE;i++) {
         ps = i * P4MSIZE;
-        kpgdir[i] = (ps) | PTE_W | PTE_PS;
         kpgdir[KINDEX+i] = (ps) | PTE_W | PTE_PS;
 
-        if(mappages(kpgdir,ps,ps,P4MSIZE,PTE_W) || mappages(kpgdir,P2V(ps),ps,P4MSIZE,PTE_W))   {
+        if(mappages(kpgdir,P2V(ps),ps,P4MSIZE,PTE_W))   {
             panic("kernel page init error");
         }
 

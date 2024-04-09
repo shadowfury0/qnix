@@ -9,10 +9,10 @@ extern void umain(void);
 extern struct segdesc* kgdt;
 
 // process arrays
-struct proc ptable[PT_SIZE];
+static struct proc ptable[PT_SIZE];
 // first process
 volatile struct proc* curproc;
-//current pid
+// current pid
 static uint curpid;
 
 void 
@@ -82,6 +82,7 @@ found:
         p->state = UNUSED;
         return 0;
     }
+
     p->state = EMBRYO;
     p->pid = curpid++ & 0xf;
     p->tss.esp += KSTACKSIZE;
@@ -103,15 +104,20 @@ found:
     return p;
 }
 
+// usr enter space
+void umain(void);
+
 void
 user_init(void)
 {
     struct proc* p;
     if((p = allocproc()) == 0)
         panic("user init error");
-
+    
+    // don't change this is point to 0x0 address for user enter size is fixed  
+    memmove(0,&umain, 0x10);
     // is the first process need point itself
-    p->tss.eip  = &umain;
+    p->tss.eip = 0;
     curproc = p;
     p->parent = p;
 
@@ -131,6 +137,7 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
     char* src = (char*)PGROUNDUP(curproc->tss.esp - PGSIZE);
     char* dst = (char*)PGROUNDUP(cp->tss.esp - PGSIZE);
     memmove(dst,src,PGSIZE);
+
     cp->tss.eax = 0;
     cp->tss.esp -= (curproc->tss.esp - esp - 4);
     cp->tss.ecx = ecx;
@@ -264,3 +271,4 @@ getpid(void)
 {
     return curproc->pid;
 }
+

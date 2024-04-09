@@ -25,7 +25,7 @@ init_welcome(void)
 void 
 main(void) 
 {
-    kminit(kend,P2V(4*1024*1024));
+    kminit(kend,P2V(4*1024*1024));    
     kvminit();
     seginit();
     proc_init();
@@ -38,6 +38,7 @@ main(void)
     init_welcome();
     cpuinfo();
     vprintf("loading...\n");
+    
     user_init();
     sti();
     schedule();

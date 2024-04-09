@@ -25,6 +25,8 @@ extern void do_int16(void);
 extern void keyboard_interrupt(void);
 extern void rtc_interrupt(void);
 
+extern void system_call(void);
+
 void
 reserve_error(void)
 {
@@ -160,6 +162,9 @@ init_idt(void)
    	SETGATE(idts[0x21],SYS_INT,SEG_KCODE << 3,keyboard_interrupt,0);
 	SETGATE(idts[0x28],SYS_INT,SEG_KCODE<<3,rtc_interrupt,0);
 
+	// system call 
+	SETGATE(idts[T_SYSCALL],SYS_INT,SEG_KCODE<<3,system_call,0);
+	
     lidt(IDT_ADDR,IDT_SIZE);
 }
 

@@ -5,7 +5,7 @@
 .globl do_int8,do_int9,do_int10,do_int11
 .globl do_int12,do_int13,do_int14,do_int16
 .globl keyboard_interrupt,rtc_interrupt,do_other
-
+.globl system_call
 do_int0:
     pushl   $divide_error
 no_error:
@@ -126,3 +126,24 @@ keyboard_interrupt:
 rtc_interrupt:
     pushl   $rtctrap
     jmp     no_error
+
+# int 0x80
+system_call:
+    push    %ds
+	push    %es
+	push    %fs
+	
+
+#   call    parameter
+    pushl   %eax
+#	pushl   %ecx
+#   pushl   %edx
+#	pushl   %ebx
+    call    syscall
+    addl    $0x04,%esp
+
+    pop     %fs
+    pop     %es
+    pop     %ds
+
+    iret

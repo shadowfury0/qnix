@@ -98,7 +98,8 @@ struct segdesc {
 
 // kernel base address
 #define KPSIZE          5
-#define KBASE           0x80000000
+// you need to change kernel.ld too
+#define KBASE           0xc0000000
 #define KINDEX          (KBASE>>PDSHIFT)
 #define KLINK           (KBASE + IOSPACE)
 #define V2P(a)          (((uint) (a)) - KBASE)
