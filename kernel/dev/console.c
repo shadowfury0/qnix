@@ -47,7 +47,7 @@ vgaputc(uchar c)
 
 //base 几进制
 void 
-printint(int num,int base) 
+printint(uint num,int base) 
 {
     static char digits[] = "0123456789abcdef";
     //最大16进制长度数

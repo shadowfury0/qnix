@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 OBJS = boot.ld boot.h boot.S bootmain.c
 CC = gcc
-CCOPTS = -O1  -nostdinc -I../include -I../include/ -c -m32  -w
+CCOPTS = -O1  -nostdinc -I../include  -c -m32  -w
 CCOPTS += -fno-pic -fno-pie -no-pie -static -fno-builtin -fno-strict-aliasing -fno-omit-frame-pointer
 LD = ld
 LDOPTS = -m elf_i386 -N 

@@ -2,7 +2,7 @@
 #include "io.h"
 #include "rtc.h"
 
-struct timer t_clock;
+static struct timer t_clock;
 
 void
 rtc_dump(void)
@@ -59,7 +59,7 @@ rtc_date(void)
         t_clock.second  = (t_clock.second & RTC_UMASK) + ((t_clock.second / 16) * 10);
         t_clock.minute  = (t_clock.minute & RTC_UMASK) + ((t_clock.minute / 16) * 10);
         // t_clock.hour    = ( (t_clock.hour & RTC_UMASK) + (((t_clock.hour & 0x70) / 16) * 10) ) | (t_clock.hour & 0x80);
-        t_clock.hour    = (t_clock.hour & RTC_UMASK) + ((t_clock.hour  / 16) * 10);
+        // t_clock.hour    = (t_clock.hour & 0x0f) + ((t_clock.hour  / 16) * 10);
         t_clock.day     = (t_clock.day & RTC_UMASK) + ((t_clock.day / 16) * 10);
         t_clock.month   = (t_clock.month & RTC_UMASK) + ((t_clock.month / 16) * 10);
         t_clock.year    = (t_clock.year & RTC_UMASK) + ((t_clock.year / 16) * 10);
@@ -98,4 +98,11 @@ void
 printdate(void)
 {
     vprintf("%d-%d-%d  %d:%d:%d \n",t_clock.year,t_clock.month,t_clock.day,t_clock.hour,t_clock.minute,t_clock.second);
+}
+
+int
+sys_time(void)
+{
+    printdate();
+    return  0;
 }

@@ -12,7 +12,6 @@ all:
 	${MAKE} -C include
 	${MAKE} -C boot
 	${MAKE} -C kernel
-	${MAKE} -C usr
 	dd if=boot/boots.bin of=${OS_IMG} bs=512 conv=notrunc
 	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
 	${MAGIC}
@@ -22,7 +21,6 @@ gdb:
 	${MAKE} -C include
 	${MAKE} -C boot	gdb
 	${MAKE} -C kernel gdb
-	${MAKE} -C usr
 	dd if=boot/boots.bin of=${OS_IMG} bs=512 conv=notrunc
 	dd if=kernel/kernel.o of=${OS_IMG} bs=512 seek=1 conv=notrunc
 	${MAGIC}
@@ -55,7 +53,6 @@ debug:
 clean:
 	${MAKE} -C boot clean
 	${MAKE} -C kernel clean
-	${MAKE} -C usr clean
 	rm -f *.tags *.log 
 
 .PHONY: clean img gdb all 
