@@ -69,7 +69,7 @@ wait_kybc_sendready(void)
 }
 
 void 
-init_keyboard(void)
+keyboard_init(void)
 {
 	// initialize keyboard control circuit
 	wait_kybc_sendready();

@@ -16,7 +16,7 @@ const char* welcome = "\
 ";
 
 void
-init_welcome(void)
+welcome_init(void)
 {
     vprintf(welcome);
     vgaputc('\n');
@@ -30,18 +30,22 @@ main(void)
     seginit();
     proc_init();
 
-    init_idt();
-    init_pic();
-    init_keyboard();
-    init_rtc();
-    
-    init_welcome();
+    welcome_init();
     cpuinfo();
     vprintf("loading...\n");
+
+    idt_init();
+    pic_init();
+    keyboard_init();
+    rtc_init();
+    ide_init();
+
     
-    user_init();
-    sti();
-    schedule();
+    for(;;)
+        ;
+    // user_init();
+    // sti();
+    // schedule();
 }
 
 __attribute__((__aligned__(PGSIZE)))

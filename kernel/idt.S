@@ -5,7 +5,7 @@
 .globl do_int8,do_int9,do_int10,do_int11
 .globl do_int12,do_int13,do_int14,do_int16
 .globl keyboard_interrupt,rtc_interrupt,do_other
-
+.globl ide_primary,ide_second
 do_int0:
     pushl   $divide_error
 no_error:
@@ -125,4 +125,12 @@ keyboard_interrupt:
 # int 0x28
 rtc_interrupt:
     pushl   $rtctrap
+    jmp     no_error
+
+ide_primary:
+    pushl   $do_ide
+    jmp     no_error
+
+ide_second:
+    pushl   $do_ide
     jmp     no_error

@@ -47,19 +47,6 @@ readseg(uchar* s, uint c, uint offset)
         readsect(s, offset);
 }
 
-// void
-// writesect(void* dst,uint offset) {
-//     outb(0x1F2, 1);   // count = 1
-//     outb(0x1F3, offset);
-//     outb(0x1F4, offset >> 8);
-//     outb(0x1F5, offset >> 16);
-//     outb(0x1F6, (offset >> 24) | 0xE0);
-//     outb(0x1F7, 0x30);  // cmd 0x30 - write sectors
-//     // Write data.
-//     waitdisk();
-//     outsl(0x1F0, dst, SECTSIZE/4);
-// }
-
 void 
 bootmain() 
 {

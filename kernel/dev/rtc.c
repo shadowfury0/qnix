@@ -14,7 +14,7 @@ rtc_dump(void)
 }
 
 void
-init_rtc(void)
+rtc_init(void)
 {
     t_clock.tick = 0;
     // 1024 Hz

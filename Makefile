@@ -3,7 +3,11 @@
 MAGIC = $(shell ./magic.sh)
 QEMU = qemu-system-i386
 OS_IMG = qos.img
-QEMUOPTS = -nic none -drive file=${OS_IMG},index=0,media=disk,format=raw -m 512 -smp ${CPUS}
+QEMUOPTS =  -drive file=${OS_IMG},media=disk,format=raw,index=0\
+			-drive file=fs.img,media=disk,format=raw,index=2\
+			-m 512 -smp ${CPUS}
+			
+
 CPUS = 1
 GDBPORT = 2500
 BOCHS	= 	bochs -f .bochsrc

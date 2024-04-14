@@ -24,6 +24,8 @@ extern void do_int14(void);
 extern void do_int16(void);
 extern void keyboard_interrupt(void);
 extern void rtc_interrupt(void);
+extern void ide_primary(void);
+extern void ide_second(void);
 
 extern void system_call(void);
 
@@ -133,7 +135,7 @@ coprocessor_error(void)
 }
 
 void
-init_idt(void)
+idt_init(void)
 {
 	int i;
     for (i=16;i<256;i++)
@@ -159,8 +161,14 @@ init_idt(void)
    	SETGATE(idts[0xf],SYS_INT,SEG_KCODE << 3,do_other,0);
    	SETGATE(idts[0x10],SYS_INT,SEG_KCODE << 3,do_int16,0);
 
+	// keyboard
    	SETGATE(idts[0x21],SYS_INT,SEG_KCODE << 3,keyboard_interrupt,0);
+	// rtc
 	SETGATE(idts[0x28],SYS_INT,SEG_KCODE<<3,rtc_interrupt,0);
+	// ata0
+	SETGATE(idts[0x2e],SYS_INT,SEG_KCODE<<3,ide_primary,0);
+	// ata1
+	SETGATE(idts[0x2f],SYS_INT,SEG_KCODE<<3,ide_second,0);
 
 	// system call 
 	SETGATE(idts[T_SYSCALL],SYS_INT,SEG_KCODE<<3,system_call,0);
@@ -169,7 +177,7 @@ init_idt(void)
 }
 
 void
-init_pic(void)
+pic_init(void)
 {	
     outb(PIC_M_CTRL,0x11);    /* Edge trigger mode */
 	outb(PIC_M_DATA,0x20);    /* IRQ0-7 mapped to INT20-27 */

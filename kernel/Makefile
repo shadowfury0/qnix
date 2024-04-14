@@ -39,6 +39,7 @@ KERNEL	 =  cpu.o\
 			umain.o\
 			vm.o\
 			dev/console.o\
+			dev/ide.o\
 			dev/kyb.o\
 			dev/rtc.o\
 			fs/exec.o
@@ -70,6 +71,7 @@ all:OBJS compile
 gdb: CCOPTS += -g
 gdb:OBJS compile
 	${MAKE} -C fs gdb
+	${MAKE} -C dev gdb
 	${LD} ${LDOPTS} -T kernel.ld -e _start -o ${KERNEL_SOURCE} ${KERNEL}
 	${OBJCOPY} --strip-debug ${KERNEL_SOURCE} kernel.o 
 	${OBJDUMP} -d -M att kernel.o > kernel.asm

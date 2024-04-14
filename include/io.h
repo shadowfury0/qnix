@@ -1,4 +1,5 @@
-static inline uchar inb(ushort port)
+static inline uchar 
+inb(ushort port)
 {
     uchar data;
     asm volatile("in %1,%0" : "=a" (data) : "d" (port));
@@ -23,12 +24,14 @@ outsl(int port, void *addr, int cnt)
                 "memory", "cc");
 }
 
-static inline void outb(ushort port, uchar data)
+static inline void 
+outb(ushort port, uchar data)
 {
     asm volatile("out %0,%1" : : "a" (data), "d" (port));
 }
 
-static inline void outw(ushort port, ushort data)
+static inline void 
+outw(ushort port, ushort data)
 {
     asm volatile("out %0,%1" : : "a" (data), "d" (port));
 }
@@ -51,22 +54,26 @@ stosl(void *addr, int data, int cnt)
                 "memory", "cc");
 }
 
-static inline void cli(void)
+static inline void 
+cli(void)
 {
     asm volatile("cli");
 }
 
-static inline void sti(void)
+static inline void 
+sti(void)
 {
     asm volatile("sti");
 }
 
-static inline void hlt(void)
+static inline void 
+hlt(void)
 {
     asm volatile("hlt");
 }
 
-static inline void stihlt(void)
+static inline void 
+stihlt(void)
 {
     asm volatile("sti;hlt");
 }
