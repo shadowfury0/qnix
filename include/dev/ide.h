@@ -84,6 +84,4 @@
 #define     PRIMARY_PORT                0x1f0
 #define     SECONDARY_PORT              0x170
 
-
-
 #define     SECTSIZE                    512

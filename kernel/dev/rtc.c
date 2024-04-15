@@ -60,6 +60,7 @@ rtc_date(void)
         t_clock.minute  = (t_clock.minute & RTC_UMASK) + ((t_clock.minute / 16) * 10);
         // t_clock.hour    = ( (t_clock.hour & RTC_UMASK) + (((t_clock.hour & 0x70) / 16) * 10) ) | (t_clock.hour & 0x80);
         // t_clock.hour    = (t_clock.hour & 0x0f) + ((t_clock.hour  / 16) * 10);
+        t_clock.hour    = (t_clock.hour + 17) % 24;
         t_clock.day     = (t_clock.day & RTC_UMASK) + ((t_clock.day / 16) * 10);
         t_clock.month   = (t_clock.month & RTC_UMASK) + ((t_clock.month / 16) * 10);
         t_clock.year    = (t_clock.year & RTC_UMASK) + ((t_clock.year / 16) * 10);

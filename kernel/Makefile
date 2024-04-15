@@ -12,6 +12,7 @@ OBJS = 	kernel.ld\
 		sys.S\
 		syscall.c\
 		sysproc.c\
+		test.c\
 		trap.c\
 		umain.S\
 		vm.c\
@@ -35,6 +36,7 @@ KERNEL	 =  cpu.o\
 			sys.o\
 			syscall.o\
 			sysproc.o\
+			test.o\
 			trap.o\
 			umain.o\
 			vm.o\
@@ -58,6 +60,7 @@ compile:
 	${CC} sys.S ${CCOPTS} -o sys.o
 	${CC} syscall.c ${CCOPTS} -o syscall.o
 	${CC} sysproc.c ${CCOPTS} -o sysproc.o
+	${CC} test.c ${CCOPTS} -o test.o
 	${CC} trap.c ${CCOPTS} -o trap.o
 	${CC} umain.S ${CCOPTS} -D__ASSEMBLY__ -o umain.o
 	${CC} vm.c ${CCOPTS} -o vm.o

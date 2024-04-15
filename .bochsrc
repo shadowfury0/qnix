@@ -19,12 +19,13 @@ vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 boot:disk
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=disk, path="qos.img", mode=flat
+ata0-slave: type=disk, path="fs.img", mode=flat
 
 # dont use this 
 #ata1: enabled=0
 
 ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
-ata1-master: type=disk, path="fs.img", mode=flat
+ata1-master: type=disk, path="dev.img", mode=flat
 
 #cpu
 cpu: count=1

@@ -1,5 +1,6 @@
 #include "types.h"
 #include "io.h"
+#include "console.h"
 
 #define CRTPORT 0x3d4
 
@@ -8,7 +9,7 @@ static ushort *crt = (ushort*)0xb8000;
 // static int pos = 0;
 
 void 
-vgaputc(uchar c) 
+vgaputc(uchar c,uchar t) 
 {
     int pos = 0;
     outb(CRTPORT,14);
@@ -25,7 +26,7 @@ vgaputc(uchar c)
     else  if (c == '\t')
         pos += 4;
     else
-        crt[pos++] = c | 0x0700;
+        crt[pos++] = c | (t << 8);
 
     if ((pos/80) >= 24) {
         memmove(crt, crt+80, sizeof(crt[0])*23*80);
@@ -45,6 +46,19 @@ vgaputc(uchar c)
     crt[pos] = ' ' | 0x0700;
 }
 
+// default 
+void
+info(uchar c)
+{
+    vgaputc(c,VGA_COLOR_LIGHT_GREY);
+}
+
+void
+error(uchar c)
+{
+    vgaputc(c,VGA_COLOR_RED);
+}
+
 //base 几进制
 void 
 printint(uint num,int base) 
@@ -57,7 +71,7 @@ printint(uint num,int base)
         bufn[i++] = digits[num % base];
     } while((num /= base) != 0);
     while ( --i >= 0 )
-        vgaputc(bufn[i]);
+        info(bufn[i]);
 }
 
 // modify later
@@ -74,7 +88,7 @@ vprintf(char* str,...)
     argp = (uint*)(void*)(&str + 1);
     for (i = 0; (c = str[i] & 0xff ) != 0; i++ ) {
         if (c != '%') {
-            vgaputc(c);
+            info(c);
             continue;
         }
         c = str[++i] & 0xff;
@@ -90,35 +104,16 @@ vprintf(char* str,...)
             if ( (s = (char*)*argp++) == 0) 
                 s = "(null)";
             for(;*s;s++)
-                vgaputc(*s);
+                info(*s);
             break;
         case '%':
-            vgaputc('%');
+            info('%');
             break;
         default:
-            vgaputc('%');
-            vgaputc(c);
+            info('%');
+            info(c);
             break;
         }
     }
 }
 
-// tmp put here
-enum vga_color {
-	VGA_COLOR_BLACK = 0,
-	VGA_COLOR_BLUE = 1,
-	VGA_COLOR_GREEN = 2,
-	VGA_COLOR_CYAN = 3,
-	VGA_COLOR_RED = 4,
-	VGA_COLOR_MAGENTA = 5,
-	VGA_COLOR_BROWN = 6,
-	VGA_COLOR_LIGHT_GREY = 7,
-	VGA_COLOR_DARK_GREY = 8,
-	VGA_COLOR_LIGHT_BLUE = 9,
-	VGA_COLOR_LIGHT_GREEN = 10,
-	VGA_COLOR_LIGHT_CYAN = 11,
-	VGA_COLOR_LIGHT_RED = 12,
-	VGA_COLOR_LIGHT_MAGENTA = 13,
-	VGA_COLOR_LIGHT_BROWN = 14,
-	VGA_COLOR_WHITE = 15,
-};

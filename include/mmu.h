@@ -107,9 +107,6 @@ struct segdesc {
 #define P2V(a)          ((void *)(((char *) (a)) + KBASE))
 #define P2VS(a)         ((a) + KBASE)
 
-// number of elements in fixed-size array
-#define NELEM(x)        (sizeof(x)/sizeof((x)[0]))
-
 // ----------------------------------------------------------------------------
 
 #define SYS_TSS         0x9     // Available 32-bit TSS

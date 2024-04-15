@@ -40,12 +40,9 @@ main(void)
     rtc_init();
     ide_init();
 
-    
-    for(;;)
-        ;
-    // user_init();
-    // sti();
-    // schedule();
+    sti();
+    user_init();
+    schedule();
 }
 
 __attribute__((__aligned__(PGSIZE)))

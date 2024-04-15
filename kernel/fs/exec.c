@@ -1,4 +1,5 @@
 #include "types.h"
+#include "io.h"
 
 static int
 count(char** argv)
@@ -9,8 +10,6 @@ count(char** argv)
     for (s=argv;*s != 0;s++,i++);
     return i;
 }
-
-#include "io.h"
 
 int
 exec(uint eip,char* path,char** argv)

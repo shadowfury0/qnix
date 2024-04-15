@@ -4,9 +4,9 @@ MAGIC = $(shell ./magic.sh)
 QEMU = qemu-system-i386
 OS_IMG = qos.img
 QEMUOPTS =  -drive file=${OS_IMG},media=disk,format=raw,index=0\
-			-drive file=fs.img,media=disk,format=raw,index=2\
-			-m 512 -smp ${CPUS}
-			
+			-drive file=fs.img,media=disk,format=raw,index=1\
+			-drive file=dev.img,media=disk,format=raw,index=2\
+			-m 512 -smp ${CPUS}		
 
 CPUS = 1
 GDBPORT = 2500
