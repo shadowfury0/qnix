@@ -2,18 +2,9 @@
 #include "io.h"
 #include "ide.h"
 
-struct ide_device {
-    uchar  exist;       // 0 (Empty) or 1 (This Drive really exists).
-    uchar  channel;     // 0 (Primary Channel) or 1 (Secondary Channel).
-    uchar  drive;       // 0 (Master Drive) or 1 (Slave Drive).
-    // uchar  type;        // 0: ATA, 1:ATAPI
-    ushort signature;   // Drive Signature
-    ushort capabilities;// Features.
-    uint   commandSets; // Command Sets Supported.
-    uint   size;        // Size
-}   ide_devices[4];
+struct ide_device ide_devices[IDE_DEV_SIZE];
 
-static uchar ide_buf[512] = {0};
+static uchar ide_buf[SECTSIZE] = {0};
 
 uint
 idewait(uint d)
@@ -129,7 +120,7 @@ check_drives(void)
         }
 }
 
-uint
+void
 readsect(void *dst, uint offset,uint p,uint d)
 {
     outb(p + ATA_REG_SECCOUNT, 1);   // count = 1
@@ -154,6 +145,30 @@ writesect(void* dst,uint offset,uint p,uint d) {
     idewait(p);
     // Write 512 B data.
     outsl(p + ATA_REG_DATA, dst, SECTSIZE/4);
+}
+
+void
+ideread(void* dst,uint offset,uint dev)
+{
+    if (dev >= sizeof(IDE_DEV_SIZE))
+    {
+        vprintf("device is not found\n");
+        return;
+    }
+    // read a sector from device
+    readsect(dst,offset,select_channel(dev>>1),dev%2);
+}
+
+void
+idewrite(void* dst,uint offset,uint dev)
+{
+    if (dev >= sizeof(IDE_DEV_SIZE))
+    {
+        vprintf("device is not found\n");
+        return;
+    }
+    // write a sector from device
+    writesect(dst,offset,select_channel((dev & 1)? ATA_SECONDARY : ATA_PRIMARY),dev%2);
 }
 
 void

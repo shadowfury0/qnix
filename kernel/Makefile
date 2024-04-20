@@ -8,6 +8,7 @@ OBJS = 	kernel.ld\
 		memory.c\
 		panic.c\
 		proc.c\
+		string.c\
 		swtch.S\
 		sys.S\
 		syscall.c\
@@ -32,6 +33,7 @@ KERNEL	 =  cpu.o\
 			memory.o\
 			panic.o\
 			proc.o\
+			string.o\
 			swtch.o\
 			sys.o\
 			syscall.o\
@@ -44,7 +46,8 @@ KERNEL	 =  cpu.o\
 			dev/ide.o\
 			dev/kyb.o\
 			dev/rtc.o\
-			fs/exec.o
+			fs/exec.o\
+			fs/fat.o\
 
 #all strategy
 compile:
@@ -56,6 +59,7 @@ compile:
 	${CC} memory.c ${CCOPTS} -o memory.o
 	${CC} panic.c ${CCOPTS} -o panic.o
 	${CC} proc.c ${CCOPTS} -o proc.o
+	${CC} string.c ${CCOPTS} -o string.o
 	${CC} swtch.S ${CCOPTS} -o swtch.o
 	${CC} sys.S ${CCOPTS} -o sys.o
 	${CC} syscall.c ${CCOPTS} -o syscall.o

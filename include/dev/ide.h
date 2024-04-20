@@ -84,4 +84,17 @@
 #define     PRIMARY_PORT                0x1f0
 #define     SECONDARY_PORT              0x170
 
+#define     IDE_DEV_SIZE                4
 #define     SECTSIZE                    512
+
+
+struct ide_device {
+    uchar  exist;       // 0 (Empty) or 1 (This Drive really exists).
+    uchar  channel;     // 0 (Primary Channel) or 1 (Secondary Channel).
+    uchar  drive;       // 0 (Master Drive) or 1 (Slave Drive).
+    // uchar  type;        // 0: ATA, 1:ATAPI
+    ushort signature;   // Drive Signature
+    ushort capabilities;// Features.
+    uint   commandSets; // Command Sets Supported.
+    uint   size;        // Size
+};

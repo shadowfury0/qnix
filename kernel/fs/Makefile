@@ -1,16 +1,18 @@
 .DEFAULT_GOAL := all
 CC = gcc
-CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../../include   -c -m32  -w
+CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../../include -I../../include/fs -I../../include/dev -c -m32  -w
 LD = ld
 KERNEL_SOURCE = kernelsource
 LDOPTS = -m elf_i386 -N 
 OBJCOPY = objcopy
 OBJDUMP = objdump
 
-OBJS = exec.c\
+OBJS = 	exec.c\
+		fat.c\
 	
 all:OBJS
 	${CC} exec.c ${CCOPTS} -o exec.o
+	${CC} fat.c ${CCOPTS} -o fat.o
 	
 gdb: CCOPTS += -g
 gdb: all

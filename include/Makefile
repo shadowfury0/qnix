@@ -12,5 +12,6 @@ INDS = 	elf32.h\
 
 all:INDS
 	${MAKE} -C dev
+	${MAKE} -C fs
 
 .PHONY: INDS all

@@ -5,9 +5,10 @@
 void
 test(void)
 {
-        
+    fat_init();
+
     for(;;) {
-        stihlt();
-        printdate();
+        // stihlt();
+        // printdate();
     }
 }
