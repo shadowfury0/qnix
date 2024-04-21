@@ -25,7 +25,8 @@ welcome_init(void)
 void 
 main(void) 
 {
-    kminit(kend,P2V(4*1024*1024));    
+    kminit1(kend,P2V(4*1024*1024));    
+
     kvminit();
     seginit();
     proc_init();

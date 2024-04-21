@@ -97,7 +97,7 @@ struct segdesc {
 #define IOSPACE         0x100000        // IO SPACE
 
 // kernel base address
-#define KPSIZE          5
+#define KPSIZE          2
 // you need to change kernel.ld too
 #define KBASE           0xc0000000
 #define KINDEX          (KBASE>>PDSHIFT)

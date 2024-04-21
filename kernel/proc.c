@@ -40,7 +40,7 @@ schedule(void)
                 continue;
             p->parent->state = RUNNABLE;
             // clear stack
-            kfree(PGROUNDUP(p->tss.esp-PGSIZE));
+            free_page(PGROUNDUP(p->tss.esp-PGSIZE));
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
@@ -78,7 +78,7 @@ allocproc(void)
     return 0;
 found:
 
-    if ((p->tss.esp = kalloc()) == 0) {
+    if ((p->tss.esp = alloc_page()) == 0) {
         p->state = UNUSED;
         return 0;
     }

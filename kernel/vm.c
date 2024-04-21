@@ -26,7 +26,7 @@ struct segdesc* kgdt;
 void
 seginit(void)
 {
-    if ((kgdt = (struct segdesc*)kalloc()) == 0)
+    if ((kgdt = (struct segdesc*)alloc_page()) == 0)
         panic("alloc gdt table error");
     
     kgdt[SEG_NULL]  = SEG(0,0,0,0);
@@ -50,7 +50,7 @@ findpage(int* pgdir, const void *va, int alloc)
     if(*pde & PTE_P){
         pgtab = (int*)P2V(PTE_ADDR(*pde));
     } else {
-        if(!alloc || (pgtab = (int*)kalloc()) == 0)
+        if(!alloc || (pgtab = (int*)alloc_page()) == 0)
             return 0;
         memset(pgtab, 0, PGSIZE);
         *pde = V2P(pgtab) | PTE_P | PTE_U | PTE_W;
@@ -84,7 +84,7 @@ int*
 setupkvm(void)
 {
     int* pgdir;
-    if ((pgdir = (int*)kalloc()) == 0)
+    if ((pgdir = (int*)alloc_page()) == 0)
         return 0;
 
     memset(pgdir,0,PGSIZE);
@@ -106,17 +106,17 @@ kvminit(void)
     lcr3(V2P(kpgdir));
     // other pages
     int i;
-    int ps;
-    for (i=1;i<KPSIZE;i++) {
-        ps = i * P4MSIZE;
-        kpgdir[KINDEX+i] = (ps) | PTE_W | PTE_PS;
+    uint ps;
+    // for (i=1;i<KPSIZE;i++) {
+    //     ps = i * P4MSIZE;
+    //     kpgdir[KINDEX+i] = (ps) | PTE_W | PTE_PS;
 
-        if(mappages(kpgdir,P2V(ps),ps,P4MSIZE,PTE_W))   {
-            panic("kernel page init error");
-        }
-
-        freerange((char*)P2V(ps),(char*)P2V(ps + P4MSIZE));
-    }
+    //     if(mappages(kpgdir,P2V(ps),ps,P4MSIZE,PTE_W))   {
+    //         panic("kernel page init error");
+    //     }
+    //     // freerange((char*)P2V(ps),(char*)P2V(ps + P4MSIZE));
+    //     kfree((char*)P2V(ps),P4MSIZE);
+    // }
 }
 
 int
@@ -138,7 +138,7 @@ deallocvm(int* pgdir, uint oldsz, uint newsz)
             if(pa == 0)
                 panic("kfree");
             char *v = P2V(pa);
-            kfree(v);
+            free_page(v);
             *pte = 0;
         }
     }
@@ -157,7 +157,7 @@ allocvm(int *pgdir, uint oldsz, uint newsz)
 
     s = PGROUNDUP(newsz);
     for (;s < newsz; s += PGSIZE) {
-        if ((mem = kalloc() == 0)) {
+        if ((mem = alloc_page() == 0)) {
             vprintf("allocate out of memory\n");
             deallocvm(pgdir, newsz, oldsz);
             return 0;
@@ -166,7 +166,7 @@ allocvm(int *pgdir, uint oldsz, uint newsz)
         if (mappages(pgdir,(char*)s,V2P(mem),PGSIZE,PTE_W|PTE_U)) {
             vprintf("allocate out of memory (2)\n");
             deallocvm(pgdir, newsz, oldsz);
-            kfree(mem);
+            free_page(mem);
             return 0;
         }
     }
@@ -183,8 +183,8 @@ freevm(int* pgdir)
     for (i=0;i<PGTSIZE;i++) {
         if (pgdir[i] & PTE_P) {
             char* f = P2V(PTE_ADDR(pgdir[i]));
-            kfree(f);
+            free_page(f);
         }
     }
-    kfree((char*)pgdir);
+    free_page((char*)pgdir);
 }
