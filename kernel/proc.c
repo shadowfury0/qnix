@@ -116,10 +116,9 @@ user_init(void)
         panic("user init error");
     
     // don't change this is point to 0x0 address for user enter size is fixed  
-    // memmove(0,&umain, 0x1a);
+    memmove(0,&umain, 0x1a);
     // is the first process need point itself
-    // p->tss.eip = 0;
-    p->tss.eip = &test;
+    p->tss.eip = 0;
     curproc = p;
     p->parent = p;
 

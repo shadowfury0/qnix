@@ -111,6 +111,20 @@ struct fat_long_dir {
 
 // The “BAD CLUSTER” value is 0x0FF7 for FAT12, 0xFFF7 for FAT16, and 0x0FFFFFF7 for FAT32.
 
+struct fat_info {
+    uint    index;              // ide index
+    uint    fat_type;
+    uint    total_sectors;
+    uint    total_clusters;
+    uint    first_fat_sector;
+    uint    second_fat_sector;
+    uint    fat_size;
+    uint    first_root_sector;
+    uint    dir_sectors;
+    uint    first_data_sector;
+    uint    data_sectors;
+    struct  fat_bpb bpb;
+};
 
 // Official reference, not necessarily standard
 // disk size to sector per cluster

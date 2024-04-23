@@ -98,3 +98,7 @@ struct ide_device {
     uint   commandSets; // Command Sets Supported.
     uint   size;        // Size
 };
+
+
+#define     DEVICE_NFOUND_V(x) {if(!x) return;}
+#define     DEVICE_NFOUND(x) {if(!x) return 0;}

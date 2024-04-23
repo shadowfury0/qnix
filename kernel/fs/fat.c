@@ -1,97 +1,58 @@
 #include "types.h"
+#include "mmu.h"
 #include "ide.h"
 #include "fat.h"
 
-extern struct ide_device ide_devices[4];
+extern struct ide_device ide_devices[IDE_DEV_SIZE];
 
 // switch to disk sectsize
-#define SWT_SECTSIZE(x,bp) ((x * bp) / SECTSIZE)
-
-struct  fat_bpb fat_boot;
-
-// base fat info
-struct fat_info {
-    uchar   exist;
-    uchar   fat_type;
-    uint    total_sectors;
-    uint    total_clusters;
-    uint    first_fat_sector;
-    uint    second_fat_sector;
-    uint    fat_size;
-    uint    first_root_sector;
-    uint    dir_sectors;
-    uint    first_data_sector;
-    uint    data_sectors;
-} fat_info[IDE_DEV_SIZE];
-
-void
-fat_init(void)
-{
-    uint i=0;
-    for (i=0;i<IDE_DEV_SIZE;i++)
-    {
-        fat_info[i].exist = 0;
-        fat_info[i].fat_type = 0;
-    }
-}
+#define SWT_BLOCK(x,bp) ((x * bp) / SECTSIZE)
 
 // init ide_device[i]
 void
-fat_alloc(uint index)
+fat_init(struct fat_info* f)
 {
-    if (index >= IDE_DEV_SIZE)
-    {
-        vprintf("device is not found\n");
-        return;
-    }
-    else if (!ide_devices[index].exist) {
-        vprintf("do not exist\n");
-        return;
-    }
-
-    char* p = alloc_page();
-    fat_info[index].exist = 1;    
     // read first bpb block
-    ideread(p,0,index,1);
-    memcpy(&fat_boot,p,sizeof(struct fat_bpb));
+    char* p = alloc_page();
+    DEVICE_NFOUND_V(ideread(p,0,f->index,1));
+    memcpy(&f->bpb,p,sizeof(struct fat_bpb));
+    free_page(p);
     // Total sectors in volume (including VBR):
-    fat_info[index].total_sectors = 
-    (fat_boot.total_sectors_16 == 0)? fat_boot.total_sectors_32 : fat_boot.total_sectors_16;
+    f->total_sectors = 
+    (f->bpb.total_sectors_16 == 0)? f->bpb.total_sectors_32 : f->bpb.total_sectors_16;
     
     // FAT size in sectors:
-    fat_info[index].fat_size = (fat_boot.fats_size_16 == 0)? 
-    fat_boot.ext_32.fat_size_32 : fat_boot.fats_size_16;
+    f->fat_size = (f->bpb.fats_size_16 == 0)? 
+    f->bpb.ext_32.fat_size_32 : f->bpb.fats_size_16;
 
     // The first sector in the File Allocation Table
-    fat_info[index].first_fat_sector = fat_boot.reserved_sector_count;
-    fat_info[index].second_fat_sector = fat_boot.reserved_sector_count + fat_info[index].fat_size;
+    f->first_fat_sector = f->bpb.reserved_sector_count;
+    f->second_fat_sector = f->bpb.reserved_sector_count + f->fat_size;
 
     // The first root directory sector
-    fat_info[index].first_root_sector = 
-    fat_boot.reserved_sector_count + (fat_boot.nums_fat * fat_info[index].fat_size);
+    f->first_root_sector = 
+    f->bpb.reserved_sector_count + (f->bpb.nums_fat * f->fat_size);
     // The size of the root directory (unless you have FAT32, in which case the size will be 0):
-    fat_info[index].dir_sectors = 
-    ((fat_boot.root_entry_count * sizeof(struct fat_dir)) + (fat_boot.bytes_per_sector - 1)) / fat_boot.bytes_per_sector;
+    f->dir_sectors = 
+    ((f->bpb.root_entry_count * sizeof(struct fat_dir)) + (f->bpb.bytes_per_sector - 1)) / f->bpb.bytes_per_sector;
     // The first data sector
-    fat_info[index].first_data_sector = 
-    fat_info[index].first_root_sector + fat_info[index].dir_sectors;
+    f->first_data_sector = 
+    f->first_root_sector + f->dir_sectors;
 
     // The total number of data sectors
-    fat_info[index].data_sectors = 
-    fat_info[index].total_sectors - (fat_boot.reserved_sector_count + (fat_boot.nums_fat * fat_info[index].fat_size) + fat_info[index].dir_sectors);
+    f->data_sectors = 
+    f->total_sectors - (f->bpb.reserved_sector_count + (f->bpb.nums_fat * f->fat_size) + f->dir_sectors);
     // The total number of clusters
-    fat_info[index].total_clusters = fat_info[index].data_sectors / fat_boot.sectors_per_cluster;
+    f->total_clusters = f->data_sectors / f->bpb.sectors_per_cluster;
     // The FAT type of this file system:
-    if (fat_boot.bytes_per_sector == 0) 
-        fat_info[index].fat_type = ExFAT;
-    else if(fat_info[index].total_clusters < FAT12_CLUST) 
-        fat_info[index].fat_type = FAT12;
-    else if(fat_info[index].total_clusters < FAT16_CLUST) 
-        fat_info[index].fat_type = FAT16;
+    if (f->bpb.bytes_per_sector == 0) 
+        f->fat_type = ExFAT;
+    else if(f->total_clusters < FAT12_CLUST) 
+        f->fat_type = FAT12;
+    else if(f->total_clusters < FAT16_CLUST) 
+        f->fat_type = FAT16;
     else
-        fat_info[index].fat_type = FAT32;
-
-    free_page(p);
+        f->fat_type = FAT32;
 }
 
 // file in fat offset
@@ -117,24 +78,48 @@ fat_clus_offset(struct fat_dir* dir,const char* name)
 void
 fat_read_dir(uint* vs,const char* name)
 {
-    struct  fat_dir* s;
-    struct  fat_dir* e = s + fat_boot.sectors_per_cluster * fat_boot.bytes_per_sector / sizeof(struct fat_dir);
-    for (s = (struct fat_dir*)vs; s < e; s++)
-    {
-        if (fat_clus_offset(s,name) > 0) break;
-    }
+    // struct  fat_dir* s;
+    // struct  fat_dir* e = s + f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector / sizeof(struct fat_dir);
+    // for (s = (struct fat_dir*)vs; s < e; s++)
+    // {
+    //     if (fat_clus_offset(s,name) > 0) break;
+    // }
 }
 
 void
-fat_root_directory(struct fat_info* f)
+fat_read_block(struct fat_info* f,char* buf,uint offset)
 {
-    // uint sf = SWT_SECTSIZE(f->first_fat_sector,fat_boot.bytes_per_sector);
-    // uint count = SWT_SECTSIZE(f->fat_size,fat_boot.bytes_per_sector);
-    // char* p = alloc_page();
-    // ideread(p,sf,1,count);
-    // free_page(p);
-    // uint sf = SWT_SECTSIZE(f->first_fat_sector,fat_boot.bytes_per_sector);
+    DEVICE_NFOUND_V(ideread(buf,offset,f->index,1));
 }
+
+// s is read size
+void
+fat_read_blocks(struct fat_info* f,char* buf,uint offset,uint s)
+{
+    DEVICE_NFOUND_V(ideread(buf,offset,f->index,s / SECTSIZE));
+}
+
+void
+fat_write_block(struct fat_info* f,char* buf,uint offset)
+{
+    DEVICE_NFOUND_V(idewrite(buf,offset,f->index,1));
+}
+
+void
+fat_write_blocks(struct fat_info* f,char* buf,uint offset,uint s)
+{
+    DEVICE_NFOUND_V(idewrite(buf,offset,f->index,s/SECTSIZE));
+}
+
+// rszie is root directory size
+void
+fat_root_directory(struct fat_info* f,char* buf)
+{
+    uint sf = SWT_BLOCK(f->first_fat_sector,f->bpb.bytes_per_sector);
+    fat_read_blocks(f,buf,sf,PGROUNDUP(f->fat_size*f->bpb.bytes_per_sector));
+}
+
+
 
 //-----------------------------------------------------------------------------
 // checksum()

@@ -169,28 +169,30 @@ writeseg(void* s,uint offset,uint p,uint d,uint c)
         writesect(s,offset+i,p,d);
 }
 
-void
+uint
 ideread(void* dst,uint offset,uint dev,uint c)
 {
     if (dev >= IDE_DEV_SIZE)
     {
         vprintf("device is not found\n");
-        return;
+        return 0;
     }
     // read a sector from device
     readseg(dst,offset,select_channel(dev>>1),dev%2,1);
+    return 1;
 }
 
-void
+uint
 idewrite(void* dst,uint offset,uint dev,uint c)
 {
     if (dev >= IDE_DEV_SIZE)
     {
         vprintf("device is not found\n");
-        return;
+        return 0;
     }
     // write a sector from device
     writeseg(dst,offset,select_channel((dev & 1)? ATA_SECONDARY : ATA_PRIMARY),dev%2,c);
+    return 1;
 }
 
 void
