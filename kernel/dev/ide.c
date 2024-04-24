@@ -6,17 +6,15 @@ struct ide_device ide_devices[IDE_DEV_SIZE];
 
 static uchar ide_buf[SECTSIZE] = {0};
 
-uint
+static int
 idewait(uint d)
 {
 	// wait until is ready
-    volatile uchar status;
-	for(;;) {
-        status = inb(d + ATA_REG_STATUS);
-        if (status & ATA_SR_DRQ) break;
-        if (status & ATA_SR_ERR) return ATA_SR_ERR;
-    }
-    return inb(d + ATA_REG_STATUS) & ATA_SR_ERR;
+    int r;
+    while(((r = inb(0x1f7)) & (ATA_SR_BSY|ATA_SR_DRDY)) != ATA_SR_DRDY);
+    if((r & (ATA_SR_DF|ATA_SR_ERR)) != 0)
+        return -1;
+    return 0;
 }
 
 // i dont know why do that in ata
@@ -134,7 +132,11 @@ readsect(void *dst, uint offset,uint p,uint d)
     outb(p + ATA_REG_LBA2, offset >> 16);
     outb(p + ATA_REG_HDDEVSEL, (offset >> 24) | 0xE0 | (d<<4));
     outb(p + ATA_REG_COMMAND, 0x20);  // cmd 0x20 - read sectors
-    idewait(p);
+    if(idewait(p))
+    {
+        vprintf("disk wait err\n");
+        return;
+    }
     // Read 512 B data.
     insl(p + ATA_REG_DATA, dst, SECTSIZE>>2);
 }
@@ -150,13 +152,17 @@ readseg(void* s,uint offset,uint p,uint d,uint c)
 void
 writesect(void* dst,uint offset,uint p,uint d) 
 {
-    outb(p + ATA_REG_SECCOUNT, 1);   // count = 1
+    outb(p + ATA_REG_SECCOUNT, 1);
     outb(p + ATA_REG_LBA0, offset);
     outb(p + ATA_REG_LBA1, offset >> 8);
     outb(p + ATA_REG_LBA2, offset >> 16);
     outb(p + ATA_REG_HDDEVSEL, (offset >> 24) | 0xE0 | (d<<4));
     outb(p + ATA_REG_COMMAND, 0x30);  // cmd 0x30 - write sectors
-    idewait(p);
+    if(idewait(p))
+    {
+        vprintf("disk wait err\n");
+        return;
+    }
     // Write 512 B data.
     outsl(p + ATA_REG_DATA, dst, SECTSIZE>>2);
 }
@@ -178,7 +184,7 @@ ideread(void* dst,uint offset,uint dev,uint c)
         return 0;
     }
     // read a sector from device
-    readseg(dst,offset,select_channel(dev>>1),dev%2,1);
+    readseg(dst,offset,select_channel(dev>>1),dev%2,c);
     return 1;
 }
 
@@ -191,7 +197,7 @@ idewrite(void* dst,uint offset,uint dev,uint c)
         return 0;
     }
     // write a sector from device
-    writeseg(dst,offset,select_channel((dev & 1)? ATA_SECONDARY : ATA_PRIMARY),dev%2,c);
+    writeseg(dst,offset,select_channel(dev>>1),dev%2,c);
     return 1;
 }
 

@@ -15,6 +15,7 @@ count(char** argv)
 }
 
 struct fat_info f;
+struct fat_dir rd;
 
 int
 exec(uint eip,char* path,char** argv)
@@ -22,12 +23,11 @@ exec(uint eip,char* path,char** argv)
     // init fat code
     f.index = 1;
     fat_init(&f);
+    fat_rootdir_init(&f);
+    rd.file_size = 2000;
+    rd.name[0] = 'a';
 
-    uint p = PGROUNDUP(f.fat_size*f.bpb.bytes_per_sector);
-    char* d = kalloc(p);
-    fat_root_directory(&f,d);
-    kfree(d,p);
-
+    fat_test(&f,&rd);
     for(;;)
         ;
 

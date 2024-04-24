@@ -9,10 +9,12 @@ OBJDUMP = objdump
 
 OBJS = 	exec.c\
 		fat.c\
+		fs.c\
 	
 all:OBJS
 	${CC} exec.c ${CCOPTS} -o exec.o
 	${CC} fat.c ${CCOPTS} -o fat.o
+	${CC} fs.c ${CCOPTS} -o fs.o
 	
 gdb: CCOPTS += -g
 gdb: all
