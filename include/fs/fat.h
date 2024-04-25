@@ -60,9 +60,9 @@ struct fat_dir {
     u8      name[11];
     u8      attr;           // File attributes:
     u8      ntres;          // Reserved for use by Windows NT.
-    u8      crt_time_tenth;      // This field actually contains a count of tenths of a second.
-    u16     crt_time;       // Time file was created.      
-    u16     crt_date;       // Date file was created.
+    u8      crt_time_tenth;     // This field actually contains a count of tenths of a second.
+    u16     crt_time;           // Time file was created.      
+    u16     crt_date;           // Date file was created.
     u16     last_acc_date;      // Last access date.
     // High word of this entry’s first cluster number (always 0 for a FAT12 or FAT16 volume).
     u16     first_clus_high;   
@@ -126,6 +126,7 @@ struct fat_info {
     struct  fat_bpb bpb;
 };
 
+#define     FAT16_DOS_YEAR          1980
 // Official reference, not necessarily standard
 // disk size to sector per cluster
 // struct ds_to_spc {

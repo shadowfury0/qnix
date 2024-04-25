@@ -80,8 +80,60 @@ fat_write_blocks(struct fat_info* f,char* buf,uint offset,uint s)
     DEVICE_NFOUND_V(idewrite(buf,offset,f->index,s/SECTSIZE));
 }
 
+// return fat cluster offset
+uint
+fat_clus_offset(struct fat_dir* dir)
+{
+    char ch = dir->name[0];
+    if (ch == 0x00 || ch == 0xe5)
+        // free
+        return 0;
+    else if (ch == 0x20)
+        // error
+        return -1;
+
+    return  (dir->first_clus_low | (dir->first_clus_high << 16));
+}
+
+// find name in one cluster directory 
+uint
+fat_find_name(struct fat_info* f,uint* dir,const char* name)
+{
+    struct  fat_dir* s = (struct fat_dir*)dir;
+    struct  fat_dir* e = (struct fat_dir*)((uint)s + PGROUNDUP(f->dir_sectors*f->bpb.bytes_per_sector));
+    
+    uint c = 0;
+    for (;s<e;s++) {
+        c=fat_clus_offset(s);
+        if (!c) continue;
+        // compare name
+        if(!strncmp(s->name,name,11)) break;
+    }
+    return c;
+}
+
+// update current directory file info
+void
+fat_update_dir(struct fat_info* f,uint* dir,struct fat_dir* file)
+{
+    volatile struct  fat_dir* s = (struct fat_dir*)dir;
+    struct  fat_dir* e = (struct fat_dir*)((uint)s + PGROUNDUP(f->dir_sectors*f->bpb.bytes_per_sector));
+    
+    for (;s<e;s++) {
+        // compare name
+        if(!strncmp(s->name,file->name,11)) {
+            s->write_time = file->write_time;
+            s->write_date = file->write_date;
+            s->last_acc_date = file->last_acc_date;
+            return;
+        }
+    }
+    vprintf("file not found to update\n");
+}
+
 // dst is directory address 
 // fs is file size
+// return cluster offset
 uint
 fat16_clus_create(struct fat_info* f,void* dst,uint fs)
 {
@@ -90,14 +142,15 @@ fat16_clus_create(struct fat_info* f,void* dst,uint fs)
     uint cs = f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector;
     uint size = (fs / cs) + (fs % cs ? 1 : 0);
 
-    volatile uint i = 0;
-    volatile uint j = 0;
+    uint i = 0;
+    uint j = 0;
     for (;s<e;s++,j++) 
     {
         if (i == size) break;
         if (*s == 0) i++;
     }
 
+    uint offset = j-1;
     // is full not space to allocate
     if (i != size) return 0; 
     *--s = EOC_16;
@@ -107,7 +160,7 @@ fat16_clus_create(struct fat_info* f,void* dst,uint fs)
             *s = j + 1;
             i--;
         }
-    return 1;
+    return offset;
 }
 
 // if exist next cluster
@@ -115,6 +168,51 @@ uint
 fat16_clus_next(ushort* fat,uint offset)
 {
     return  fat[offset] == EOC_16 ? 0: (ushort)fat[offset];
+}
+
+// buf push read data size is caculate by file->file_size
+void
+fat_read_file(struct fat_info* f,uint* dir,struct fat_dir* file,void* buf)
+{
+    uint offset = 0;
+    if (!(offset = fat_find_name(f,dir,file->name)))
+    {
+        vprintf("read file not found\n");
+        return;
+    }
+    // cause root minus 1
+    uint d = f->first_data_sector + offset - 1;
+    uint r = SWT_BLOCK(d,f->bpb.bytes_per_sector);
+    uint size = PGROUNDUP(file->file_size);
+    fat_read_blocks(f,buf,r,size);
+}
+
+// dst is write file block destination
+// block is the data sector
+void
+fat_write_file(struct fat_info* f,uint* dir,struct fat_dir* file,const char* buf,uint len)
+{
+    uint offset = 0;
+    if (!(offset = fat_find_name(f,dir,file->name)))
+    {
+        vprintf("write file not found\n");
+        return;
+    }
+    file->write_time = (ushort)(rtc_get_hour() << 11) | (rtc_get_minute() << 5) | rtc_get_second();
+    file->write_date = (ushort)((rtc_get_year() - FAT16_DOS_YEAR )<< 9)  | (rtc_get_month() << 5)  | rtc_get_day();
+    file->last_acc_date = (ushort)((rtc_get_year() - FAT16_DOS_YEAR )<< 9)  | (rtc_get_month() << 5)  | rtc_get_day();
+    fat_update_dir(f,dir,file);
+    // cause root minus 1
+    uint d = f->first_data_sector + offset - 1;
+    uint w = SWT_BLOCK(d,f->bpb.bytes_per_sector);
+    uint size = PGROUNDUP(file->file_size);
+    char* p = kalloc(size);
+    fat_read_blocks(f,p,w,size);
+    // maybe not efficiency
+    memcpy(p,buf,len);
+    fat_write_blocks(f,p,w,size);
+    
+    kfree(p,size);
 }
 
 void
@@ -138,59 +236,39 @@ fat_rootdir_init(struct fat_info* f)
     kfree(fp,fsize);
 }
 
-// return fat cluster offset
-uint
-fat_clus_offset(struct fat_dir* dir)
-{
-    char ch = dir->name[0];
-    if (ch == 0x00 || ch == 0xe5)
-        // free
-        return 0;
-    else if (ch == 0x20)
-        // error
-        return -1;
-
-    return  (dir->first_clus_low | (dir->first_clus_high << 16));
-}
-
-// find name in one cluster directory 
-uint
-fat_find_name(struct fat_info* f,uint* dir,const char* name)
-{
-    struct  fat_dir* s = (struct fat_dir*)dir;
-    struct  fat_dir* e = s + f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector / sizeof(struct fat_dir);
-    
-    uint c = 0;
-    for (;s<e;s++) {
-        c=fat_clus_offset(s);
-        if (c) continue;
-        // compare name
-        if(!strncmp(s->name,name,11)) break;
-    }
-    return c;
-}
-
 // create file or directory in directory
 void
 fat_create_file(struct fat_info* f,void* fat,void* dir,struct fat_dir* file)
 {
-    struct fat_dir* start = dir;
-    struct fat_dir* end = (uint)start + f->bpb.root_entry_count * sizeof(struct fat_dir);
+    struct fat_dir* start = (struct fat_dir*)dir;
+    struct fat_dir* end = (uint)start + f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector;
 
+    uint val;
     for (;start<end;start++)
     {
-        if (*(uint*)start == 0) {
+        val = *(uint*)start;
+        if (val && !strncmp(start->name,file->name,11))
+        {
+            vprintf("file or directory is exist\n");
+            break;
+        }
+        else if (!val) {
             // write into fat1 fat2  
             if (f->fat_type == FAT12)
             {
             }
             else if (f->fat_type == FAT16)
             {
-                if (!strncmp(start->name,file->name,11))
-                    vprintf("file or directory is exist\n");
-                else if(!fat16_clus_create(f,fat,file->file_size))
+                if(!(file->first_clus_low = fat16_clus_create(f,fat,file->file_size)))
                     vprintf("cluster is full\n");
-                memcpy(start,file,sizeof(struct fat_dir));
+                else
+                {
+                    memcpy(start,file,sizeof(struct fat_dir));
+                    start->crt_time = (rtc_get_hour() << 11) | (rtc_get_minute() << 5) | rtc_get_second();
+                    start->crt_date = ((rtc_get_year() - FAT16_DOS_YEAR )<< 9)  | (rtc_get_month() << 5)  | rtc_get_day();
+                    start->last_acc_date = start->crt_date;
+                    start->first_clus_high = 0;
+                }
             }
             else if (f->fat_type == FAT32) 
             {
@@ -198,9 +276,10 @@ fat_create_file(struct fat_info* f,void* fat,void* dir,struct fat_dir* file)
             break;
         }
     }
+
 }
 
-// create
+// test
 void
 fat_test(struct fat_info* f,struct fat_dir* dir)
 {
@@ -217,11 +296,12 @@ fat_test(struct fat_info* f,struct fat_dir* dir)
     fat_read_blocks(f,fp,fat1,fsize);
 
     fat_create_file(f,fp,dp,dir);
+    char buf[100] = "1111111111aaaaaaaaaaaaa21390123801209a@@wqio";
+    fat_write_file(f,dp,dir,buf,100);
 
-
+    fat_write_blocks(f,dp,root,dsize);
     fat_write_blocks(f,fp,fat1,fsize);
     fat_write_blocks(f,fp,fat2,fsize);
-    fat_write_blocks(f,dp,root,dsize);
 
     kfree(dp,dsize);
     kfree(fp,fsize);

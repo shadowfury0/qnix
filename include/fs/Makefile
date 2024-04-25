@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := all
-INDS =	fat.h \
+INDS =	ext2.h \
+        fat.h \
         fs.h \
 
 all:INDS

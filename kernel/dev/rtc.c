@@ -101,6 +101,42 @@ printdate(void)
     vprintf("%d-%d-%d  %d:%d:%d \n",t_clock.year,t_clock.month,t_clock.day,t_clock.hour,t_clock.minute,t_clock.second);
 }
 
+uchar
+rtc_get_second(void)
+{
+    return t_clock.second;
+}
+
+uchar
+rtc_get_minute(void)
+{
+    return t_clock.minute;
+}
+
+uchar
+rtc_get_hour(void)
+{
+    return t_clock.hour;
+}
+
+uchar
+rtc_get_day(void)
+{
+    return t_clock.day;
+}
+
+uchar
+rtc_get_month(void)
+{
+    return t_clock.month;
+}
+
+ushort
+rtc_get_year(void)
+{
+    return t_clock.year;
+}
+
 int
 sys_time(void)
 {

@@ -8,11 +8,13 @@ OBJCOPY = objcopy
 OBJDUMP = objdump
 
 OBJS = 	exec.c\
+ 		ext2.c\
 		fat.c\
 		fs.c\
 	
 all:OBJS
 	${CC} exec.c ${CCOPTS} -o exec.o
+	${CC} ext2.c ${CCOPTS} -o ext2.o
 	${CC} fat.c ${CCOPTS} -o fat.o
 	${CC} fs.c ${CCOPTS} -o fs.o
 	
