@@ -9,11 +9,11 @@ extern void umain(void);
 extern struct segdesc* kgdt;
 
 // process arrays
-static struct proc ptable[PT_SIZE];
+struct proc ptable[PT_SIZE];
 // first process
 volatile struct proc* curproc;
 // current pid
-static uint curpid;
+static int curpid;
 
 void 
 schedule(void)
@@ -45,6 +45,7 @@ schedule(void)
             p->parent = 0;
             p->pid = 0;
         }
+
     }
 }
 
@@ -58,10 +59,16 @@ proc_init(void)
         panic("process table is larger than a page");
 
     int i;
-    for (i = 3;i<PT_SIZE;i++) {
-        kgdt[i] = SEG(0,0,0,0);
-    }
+    // for (i = 3;i<PT_SIZE;i++) {
+    //     kgdt[i] = SEG(0,0,0,0);
+    // }
 
+    for (i=0;i<PT_SIZE;i++)
+    {
+        ptable[i].state = UNUSED;
+        ptable[i].pid = 0;
+        ptable[i].parent = 0;
+    }
 }
 
 struct proc*

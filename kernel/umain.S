@@ -4,7 +4,6 @@
 umain:
     movl    $init,%edx
     movl    $argv,%ecx
-#    movl    $SYS_TIME, %eax
     movl    $SYS_EXEC, %eax
     int     $T_SYSCALL
 

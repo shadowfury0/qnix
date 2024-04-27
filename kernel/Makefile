@@ -46,6 +46,7 @@ KERNEL	 =  cpu.o\
 			dev/rtc.o\
 			fs/exec.o\
 			fs/fat.o\
+			fs/fs.o\
 
 #all strategy
 compile:
