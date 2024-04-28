@@ -6,6 +6,8 @@
 
 extern char kend[];
 
+static uint knode_count;
+
 struct km_node {
     uint    size;
     struct  km_node* next;
@@ -30,6 +32,8 @@ free_page(char* v)
     r->next = kmem.h;
     r->size = PGSIZE;
     kmem.h = r;
+
+    knode_count++;
 }
 
 // kernel free size
@@ -46,6 +50,8 @@ kfree(char* v,uint size)
     s->next = kmem.h;
     s->size = PGROUNDUP(size);
     kmem.h = s;
+
+    knode_count++;
 }
 
 void
@@ -67,7 +73,10 @@ alloc_page(void)
         return 0;
     
     if (m->size == PGSIZE)
+    {
         kmem.h = m->next;
+        knode_count--;
+    }
     else {
         struct km_node* e;
         e = m + PGSIZE;
@@ -76,6 +85,7 @@ alloc_page(void)
         kmem.h  = e;
     }
 
+    memset(m,0,PGSIZE);
     return (char*)m;
 }
 
@@ -127,6 +137,7 @@ kalloc(uint size)
     {
         if (m->size == s) {
             if (p) p->next = m->next;
+            knode_count--;
             break;
         }
         else if (m->size > s) {
@@ -142,12 +153,15 @@ kalloc(uint size)
     }
 
     if (p == 0) kmem.h = m->next;
+
+    memset(m,0,s);
     return (char*)m;
 }
 
 void
 kminit1(void* vstart,void* vend)
 {
+    knode_count = 0;
     kmem.h = 0;
     freerange(vstart,vend);
 }
@@ -155,6 +169,13 @@ kminit1(void* vstart,void* vend)
 void
 kminit2(void* vstart,uint size)
 {
+    knode_count = 0;
     kmem.h = 0;
     kfree(PGROUNDUP((uint)vstart),size);
+}
+
+void
+kmnode_dump(void)
+{
+    vprintf("kernel allocate node count is : %d\n",knode_count);
 }

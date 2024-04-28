@@ -1,4 +1,5 @@
 #include "types.h"
+#include "mmu.h"
 #include "ide.h"
 #include "fat.h"
 #include "fs.h"
@@ -31,9 +32,17 @@ fnode_init(struct fnode* i)
 }
 
 void
-fdir_init(struct fdir* dir)
+fdir_init(struct fdir* dir,uint fst,uint dev,uint size,uint block,const char* name)
 {
-    memset(dir,0,sizeof(struct fdir));
+    struct  fnode* d = &dir->cur[0];
+    d->t = FT_DIR;
+    d->fst = fst;
+    d->dev = dev;
+    d->p = d;
+    d->block = block;
+    // root directory size
+    d->size = size;
+    strncpy(d->name,name,strlen(name));
 }
 
 // find block
@@ -62,12 +71,13 @@ void
 fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
 {
     // dev type is the same as directory
-    uint    devno  = fd->cur[0].dev;
-    uint    fstype = fd->cur[0].fst;
+    struct  fnode*  cur = &fd->cur[0];
+    uint    devno  = cur->dev;
+    uint    fstype = cur->fst;
     // start from the second node
     struct  fnode* s = &fd->cur[2];
     struct  fnode* e = s + sizeof(fd->cur);
-
+    
     for (;s < e;s++)
     {
         // create file in filenode
@@ -79,6 +89,16 @@ fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
             s->size = size;
             s->block = block;
             strncpy(s->name,name,FILE_NAME_SIZE);
+            if (s->t == FT_DIR) {
+                // allocate a dir in memory
+                s->p = kalloc(s->size);
+                fdir_init(s->p,s->fst,s->dev,s->size,s->block,s->name);
+                fs_read_blocks(s->p,s->block,s->dev,s->size);
+                // current
+                memcpy(&s->p->cur[0],s,sizeof(struct fnode));
+                // parent
+                memcpy(&s->p->cur[1],cur,sizeof(struct fnode));
+            }
             break;
         }
         else if (!strncmp(s->name,name,FILE_NAME_SIZE))

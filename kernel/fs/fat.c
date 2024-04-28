@@ -26,6 +26,7 @@ fat_init(struct fdir* dir,uint n,const char* name)
     DEVICE_NFOUND_V(ideread(p,0,n,1));
     memcpy(&f->bpb,p,sizeof(struct fat_bpb));
     free_page(p);
+
     // Total sectors in volume (including VBR):
     f->total_sectors = 
     (f->bpb.total_sectors_16 == 0)? f->bpb.total_sectors_32 : f->bpb.total_sectors_16;
@@ -52,30 +53,25 @@ fat_init(struct fdir* dir,uint n,const char* name)
     f->total_sectors - (f->bpb.reserved_sector_count + (f->bpb.nums_fat * f->fat_size) + f->dir_sectors);
     // The total number of clusters
     f->total_clusters = f->data_sectors / f->bpb.sectors_per_cluster;
+
     // The FAT type of this file system:
     if (f->bpb.bytes_per_sector == 0) 
         f->fat_type = ExFAT;
-    else if(f->total_clusters < FAT12_CLUST) 
+    else if(f->total_clusters < FAT12_CLUST ) 
         f->fat_type = FAT12;
     else if(f->total_clusters < FAT16_CLUST) 
         f->fat_type = FAT16;
     else
         f->fat_type = FAT32;
 
-    struct  fnode* d = &dir->cur[0];
-    d->t = FT_DIR;
-    d->fst = FS_FAT;
-    d->dev = n;
-    d->p = d;
-    d->block = SWT_BLOCK(f->first_root_sector,f->bpb.bytes_per_sector);
-    // root directory size
-    d->size = f->bpb.root_entry_count*sizeof(struct fat_dir);
-    strncpy(d->name,name,strlen(name));
+    memset(dir,0,sizeof(struct fdir));
+    fdir_init(dir,FS_FAT,n,f->bpb.root_entry_count*sizeof(struct fat_dir),
+    SWT_BLOCK(f->first_root_sector,f->bpb.bytes_per_sector),name);
 
     uint fat1 = SWT_BLOCK(f->first_fat_sector,f->bpb.bytes_per_sector);
     uint fsize = PGROUNDUP(f->fat_size * f->bpb.bytes_per_sector);
     f->fp = kalloc(fsize);
-    fs_read_blocks(f->fp,fat1,d->dev,fsize);
+    fs_read_blocks(f->fp,fat1,n,fsize);
 }
 
 void
@@ -170,7 +166,7 @@ fat16_clus_create(struct fat_info* f,uint fs)
         if (*s == 0) i++;
     }
 
-    uint offset = j-2;
+    uint offset = j-i;
     // is full not space to allocate
     if (i != size) return 0; 
     *--s = EOC_16;
@@ -228,7 +224,7 @@ fat16_clus_create(struct fat_info* f,uint fs)
 //     }
 // }
 
-// create in current
+// create in current dir
 void
 fat_create(struct fdir* fd,const char* name,uint size,uint type)
 {
@@ -242,9 +238,10 @@ fat_create(struct fdir* fd,const char* name,uint size,uint type)
     uint fsize = PGROUNDUP(f->fat_size * f->bpb.bytes_per_sector);
 
     uint  cs = dir->size;
+
     char* p = kalloc(PGROUNDUP(cs));
     struct fat_dir* start = p;
-    fs_read_blocks(start,dir->block,dir->dev,cs);
+    fs_read_blocks(p,dir->block,dir->dev,PGROUNDUP(cs));
     struct fat_dir* end = (uint)start + cs;
 
     uint val;
@@ -272,6 +269,9 @@ fat_create(struct fdir* fd,const char* name,uint size,uint type)
                 }
                 else
                 {
+                    // is dir
+                    if (type == FT_DIR) 
+                        start->attr = ATTR_DIRECTORY;
                     start->crt_time = (rtc_get_hour() << 11) | (rtc_get_minute() << 5) | rtc_get_second();
                     start->crt_date = ((rtc_get_year() - FAT16_DOS_YEAR )<< 9)  | (rtc_get_month() << 5)  | rtc_get_day();
                     start->last_acc_date = start->crt_date;
@@ -290,9 +290,9 @@ fat_create(struct fdir* fd,const char* name,uint size,uint type)
     fdir_create(fd,type,name,size,
     f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
 
-    fs_write_blocks(p,dir->block,dir->dev,cs);
     fs_write_blocks(f->fp,fat1,dir->dev,fsize);
     fs_write_blocks(f->fp,fat2,dir->dev,fsize);
+    fs_write_blocks(p,dir->block,dir->dev,PGROUNDUP(cs));
 
     kfree(p,PGROUNDUP(cs));
 }
@@ -312,6 +312,13 @@ fat_write(struct fdir* fd,const char* name,char* buf,uint len)
 
     uint  cs = node->size;
     uint  bs = f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector;
+    
+    // if the file size is less than the len
+    if (len > cs)
+    {
+        vprintf("file is smaller than write buffer\n");
+        return;
+    }
 
     cs = PGROUNDUP(cs / (f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector)
     + (cs % (f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector) ? bs : 0));
@@ -324,7 +331,10 @@ fat_write(struct fdir* fd,const char* name,char* buf,uint len)
         memset(p,0,cs);
         fs_read_blocks(p,i,dir->dev,cs);
         // copy data
-        memcpy(p,bufstart,len);
+        if (len > bs)
+            memcpy(p,bufstart,bs);
+        else
+            memcpy(p,bufstart,len);
         len -= bs;
         bufstart += bs;
         fs_write_blocks(p,i,dir->dev,cs);
@@ -341,11 +351,15 @@ void
 fat_init_fdir(struct fdir* fd)
 {
     struct fnode* dir = &fd->cur[0];
+    // is not dir
+    if (dir->t != FT_DIR)   
+        return;
+
     struct fat_info* f = &fs_info.u[dir->dev].fat;
     uint  cs = dir->size;
 
     char* p = kalloc(PGROUNDUP(cs));
-    fs_read_blocks(p,dir->block,dir->dev,cs);
+    fs_read_blocks(p,dir->block,dir->dev,PGROUNDUP(cs));
     struct fat_dir* start = p;
     struct fat_dir* end = (uint)start + cs;
 
@@ -361,13 +375,19 @@ fat_init_fdir(struct fdir* fd)
         // else 
         if (f->fat_type == FAT16)
         {
-            fdir_create(fd,FT_FILE,start->name,start->file_size,
-            f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
+            if (start->attr & ATTR_DIRECTORY) 
+                fdir_create(fd,FT_DIR,start->name,start->file_size,
+                f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
+            else
+                fdir_create(fd,FT_FILE,start->name,start->file_size,
+                f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
         }
         // else if (f->fat_type == FAT32) 
         // {
         // }
     }
+    
+    fs_write_blocks(p,dir->block,dir->dev,PGROUNDUP(cs));
 
     kfree(p,cs);
 }

@@ -13,6 +13,10 @@ CPUS = 1
 GDBPORT = 2500
 BOCHS	= 	bochs -f .bochsrc
 
+fs.img:
+	bximage -mode=create fs.img -hd=32
+	mkfs.fat fs.img
+
 all:
 	${MAKE} -C include
 	${MAKE} -C boot
@@ -60,4 +64,4 @@ clean:
 	${MAKE} -C kernel clean
 	rm -f *.tags *.log 
 
-.PHONY: clean img gdb all 
+.PHONY: clean img gdb all fs.img
