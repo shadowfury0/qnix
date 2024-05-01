@@ -352,8 +352,10 @@ fat_init_fdir(struct fdir* fd)
 {
     struct fnode* dir = &fd->cur[0];
     // is not dir
-    if (dir->t != FT_DIR)   
+    if (dir->t != FT_DIR)  {
+        vprintf(" is not dir\n");
         return;
+    }
 
     struct fat_info* f = &fs_info.u[dir->dev].fat;
     uint  cs = dir->size;
@@ -376,8 +378,13 @@ fat_init_fdir(struct fdir* fd)
         if (f->fat_type == FAT16)
         {
             if (start->attr & ATTR_DIRECTORY) 
-                fdir_create(fd,FT_DIR,start->name,start->file_size,
+            {
+                uint di = fdir_create(fd,FT_DIR,start->name,start->file_size,
                 f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
+                
+                // dfs the directory
+                fat_init_fdir(fd->cur[di].p);
+            }
             else
                 fdir_create(fd,FT_FILE,start->name,start->file_size,
                 f->first_data_sector + SWT_BLOCK(start->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));

@@ -44,19 +44,22 @@ exec(uint eip,char* path,char** argv)
     sleep(1);
     
     fat_init(&root,1,"root");
-    fat_create(&root,"tmp",2048,FT_DIR);
+    // fat_create(&root,"tmp",2048,FT_DIR);
     fat_init_fdir(&root);
+    
+    // fat_create(root.cur[2].p->cur[2].p,"c.txt",2048,FT_FILE);
 
-    fat_create(root.cur[2].p,"opt",2048,FT_DIR);
-    fat_create(root.cur[2].p,"a.txt",2048,FT_FILE);
-    fat_init_fdir(root.cur[2].p);
+    // fat_create(root.cur[2].p,"opt",2048,FT_DIR);
+    // fat_create(root.cur[2].p,"a.txt",2048,FT_FILE);
+    // fnode_dump(&root.cur[2].p->cur[2]);
+
+    fs_ls(&root);
+    // fs_tree(&root,0);
+    // fnode_dump(&root.cur[2].p->cur[2].p->cur[2]);
     // fat_write(root.cur[2].p,"a.txt",buf,strlen(buf));
 
-    // fat_create(root.cur[2].p->cur[2].p,"c.txt",2048,FT_FILE);
-    // fat_init_fdir(root.cur[2].p->cur[2].p);
 
     // fnode_dump(&root.cur[2].p->cur[2].p->cur[2]);
-    // fat_write(root.cur[2].p->cur[2].p,"c.txt",buf,strlen(buf));
     fat_clean(1);
 
     for(;;)

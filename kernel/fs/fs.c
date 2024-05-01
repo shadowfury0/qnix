@@ -67,18 +67,21 @@ fdir_find(struct fdir* fd,const char* name)
     return c;
 }
 
-void
+// return cur id in fdir
+uint
 fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
 {
     // dev type is the same as directory
     struct  fnode*  cur = &fd->cur[0];
     uint    devno  = cur->dev;
     uint    fstype = cur->fst;
+
+    uint    i = 2;
     // start from the second node
-    struct  fnode* s = &fd->cur[2];
+    struct  fnode* s = &fd->cur[i];
     struct  fnode* e = s + sizeof(fd->cur);
-    
-    for (;s < e;s++)
+
+    for (;s < e;s++,i++)
     {
         // create file in filenode
         if (s->t == 0)
@@ -104,6 +107,15 @@ fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
         else if (!strncmp(s->name,name,FILE_NAME_SIZE))
             break;
     }
+
+    return  i;
+}
+
+// DFS current directory
+void
+fs_dfs_dir(struct fdir* fd)
+{
+    fat_init_fdir(fd);
 }
 
 void
@@ -115,4 +127,53 @@ fnode_dump(struct fnode* f)
     vprintf("size : %d \n",f->size);
     vprintf("block : %d \n",f->block);
     vprintf("name : %s \n",f->name);
+}
+
+// ls current directory
+void
+fs_ls(struct fdir* fd)
+{
+    if (fd == 0)
+        return;
+    
+    struct  fnode* s = &fd->cur[2];
+    struct  fnode* e = s + sizeof(fd->cur);
+    // .
+    vprintf("%11s    %d\n",".",fd->cur[0].size);
+    // .. 
+    vprintf("%11s    %d\n","..",fd->cur[1].size);
+
+    for (;s < e;s++)
+    {
+        if (s->t == 0)
+            break;
+        vprintf("%11s    %d\n",s->name,s->size);
+    }
+}
+
+void
+fs_tree(struct fdir* fd,int level)
+{
+    if (fd == 0)
+        return;
+    
+    struct  fnode* s = &fd->cur[2];
+    struct  fnode* e = s + sizeof(fd->cur);
+
+    // .
+    // vprintf("%11s    %d\n",".",fd->cur[0].size);
+    // .. 
+    // vprintf("%11s    %d\n","..",fd->cur[1].size);
+
+    for (;s < e;s++)
+    {
+        if (s->t == 0)
+            break;
+        
+        for (int i=0;i<level;i++)
+            vprintf("\t");
+        vprintf("%11s    %d\n",s->name,s->size);
+        if(s->t == FT_DIR)
+            fs_tree(s->p,++level);
+    }
 }

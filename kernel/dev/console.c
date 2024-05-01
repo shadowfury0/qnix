@@ -83,7 +83,7 @@ vprintf(char* str,...)
 
     uint *argp;
     char* s;
-    int i,c;
+    int i,c,w;
     // represent ...
     argp = (uint*)(void*)(&str + 1);
     for (i = 0; (c = str[i] & 0xff ) != 0; i++ ) {
@@ -92,6 +92,15 @@ vprintf(char* str,...)
             continue;
         }
         c = str[++i] & 0xff;
+
+        // initialize zero
+        w = 0; 
+        // 检查是否有宽度字段
+        while (c >= '0' && c <= '9') {
+            w = w * 10 + (c - '0');
+            c = str[++i] & 0xff;
+        }
+
         switch (c) {
         case 'd':
             printint(*argp++,10);
@@ -103,8 +112,20 @@ vprintf(char* str,...)
         case 's':
             if ( (s = (char*)*argp++) == 0) 
                 s = "(null)";
-            for(;*s;s++)
-                info(*s);
+
+            if (w == 0) {
+                for(;*s;s++)
+                    info(*s);
+            } else {
+                // fill the blank right side  (left aligned)
+                int len = 0;
+                for (; *s && len < w; s++, len++)
+                    info(*s);
+                while (len < w) {
+                    info(' ');
+                    len++;
+                }
+            }
             break;
         case '%':
             info('%');
