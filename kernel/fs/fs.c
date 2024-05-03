@@ -4,18 +4,18 @@
 #include "fat.h"
 #include "fs.h"
 
-struct  fs_info fs_info;
-struct  fdir  root;
-
 void
 fs_read_blocks(char* buf,uint offset,uint dev,uint s)
 {
+    // ROUND UP
+    s = s / SECTSIZE + s % SECTSIZE ? SECTSIZE : 0;
     DEVICE_NFOUND_V(ideread(buf,offset,dev,s / SECTSIZE));
 }
 
 void
 fs_write_blocks(char* buf,uint offset,uint dev,uint s)
 {
+    s = s / SECTSIZE + s % SECTSIZE ? SECTSIZE : 0;
     DEVICE_NFOUND_V(idewrite(buf,offset,dev,s/SECTSIZE));
 }
 
@@ -84,7 +84,7 @@ fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
     for (;s < e;s++,i++)
     {
         // create file in filenode
-        if (s->t == 0)
+        if (s->t == FT_NULL)
         {
             s->t = type;
             s->fst = fstype;
@@ -111,6 +111,24 @@ fdir_create(struct fdir* fd,uint type,const char* name,uint size,uint block)
     return  i;
 }
 
+void
+fdir_delete(struct fdir* fd,const char* name)
+{
+    // start from the second node
+    struct  fnode* s = &fd->cur[2];
+    struct  fnode* e = s + sizeof(fd->cur);
+
+    for (;s < e;s++)
+    {
+        // create file in filenode
+        if (!strncmp(s->name,name,FILE_NAME_SIZE))
+        {
+            s->t = FT_NULL;
+            break;
+        }
+    }
+}
+
 // DFS current directory
 void
 fs_dfs_dir(struct fdir* fd)
@@ -121,6 +139,7 @@ fs_dfs_dir(struct fdir* fd)
 void
 fnode_dump(struct fnode* f)
 {
+    if (f->t == FT_NULL) return;
     vprintf("file system type: %d \n",f->fst);
     vprintf("file type: %d \n",f->t);
     vprintf("device : %d \n",f->dev);

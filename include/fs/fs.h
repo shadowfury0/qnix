@@ -1,3 +1,4 @@
+#define     FT_NULL         0
 #define     FT_DIR          1
 #define     FT_FILE         2
 

@@ -55,8 +55,9 @@ qemu-vnc: all
 	${QEMU} ${OS_IMG} -vnc 192.168.88.128:5900
 
 #use this command with bochs-gdb
+# --tui 
 debug:
-	gdb -ex "target extended-remote localhost:${GDBPORT}" --tui -ex "file kernel/kernelsource"
+	gdb -ex "target extended-remote localhost:${GDBPORT}" -ex "file kernel/kernelsource"
 # -ex "file boot/bootsource"
 
 clean:

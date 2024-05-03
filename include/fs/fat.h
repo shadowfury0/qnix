@@ -88,7 +88,7 @@ struct fat_long_dir {
 #define     FAT12                   0x1
 #define     FAT16                   0x2
 #define     FAT32                   0x3
-#define     ExFAT                   0x4
+#define     EXFAT                   0x4
 
 #define     FAT12_CLUST             4085
 #define     FAT16_CLUST             65525
@@ -104,6 +104,8 @@ struct fat_long_dir {
 #define     ATTR_LONG_NAME          (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
 #define     ATTR_LONG_NAME_MASK     (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID | ATTR_DIRECTORY | ATTR_ARCHIVE)
 
+// FREE THE FILE
+#define     DIR_ENTRY_FREE          0xe5
 // END OF CLUSTER
 #define     EOC_12                  0x0fff
 #define     EOC_16                  0xffff
@@ -132,7 +134,14 @@ struct fat_info {
 #define     FAT16_NEXT(f,i)         ((ushort)f[(i)*2])  
 #define     FAT16_DOS_YEAR          1980
 
-#define     FAT32_NEXT(f,i)         ((uint)f[(i)*4])  
+#define     FAT32_NEXT(f,i)         ((uint)f[(i)*4])
+
+// switch to disk sectsize
+#define SWT_BLOCK(x,bp) (((x) * (bp)) / SECTSIZE)
+// data block to fat
+#define DATB2FAT(f,n) (((n) - f->first_data_sector) / f->bpb.sectors_per_cluster + 2)
+// fat to data block
+#define FAT2DATB(f,n) ( ((n) - 2) * f->bpb.sectors_per_cluster + f->first_data_sector)
 
 // Official reference, not necessarily standard
 // disk size to sector per cluster
