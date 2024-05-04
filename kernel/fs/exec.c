@@ -24,13 +24,15 @@ exec(uint eip,char* path,char** argv)
     sleep(1);
     
     fat_init(&root,1,"root");
-    // fat_create(&root,"tmp",2048,FT_DIR);
+    fat_init_fdir(&root);
 
-    fat_delete(&root,"b.txt");
-    fat_create(&root,"b.txt",2048,FT_FILE);
+    char* name = "a.txt";
+    strupper(name);
+    fat_create(&root,name,2048,FT_FILE);
+    // fat_delete(&root,name);
+    fat_create(&root,"TMP",2048,FT_DIR);
 
     // fat_create(&root,"a.txt",4096,FT_FILE);
-    fat_init_fdir(&root);
     
     // fat_create(root.cur[2].p->cur[2].p,"c.txt",2048,FT_FILE);
 

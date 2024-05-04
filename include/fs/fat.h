@@ -137,11 +137,17 @@ struct fat_info {
 #define     FAT32_NEXT(f,i)         ((uint)f[(i)*4])
 
 // switch to disk sectsize
-#define SWT_BLOCK(x,bp) (((x) * (bp)) / SECTSIZE)
+#define     SWT_BLOCK(x,bp)         (((x) * (bp)) / SECTSIZE)
+// block is 512
 // data block to fat
-#define DATB2FAT(f,n) (((n) - f->first_data_sector) / f->bpb.sectors_per_cluster + 2)
+#define     DATB2FAT(f,n)           (((n) - f->first_data_sector) / f->bpb.sectors_per_cluster + 2)
 // fat to data block
-#define FAT2DATB(f,n) ( ((n) - 2) * f->bpb.sectors_per_cluster + f->first_data_sector)
+#define     FAT2DATB(f,n)           (((n) - 2) * f->bpb.sectors_per_cluster + f->first_data_sector)
+
+
+// System determined file name
+#define     FAT_CUR_DIR             ".          "
+#define     FAT_PRE_DIR             "..         "
 
 // Official reference, not necessarily standard
 // disk size to sector per cluster

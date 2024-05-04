@@ -8,7 +8,6 @@ struct  fs_info fs_info;
 
 extern struct ide_device ide_devices[IDE_DEV_SIZE];
 
-// global pointer to cur fat
 
 // This directory is bound to the starting root directory of the device
 void
@@ -157,7 +156,7 @@ fat_create(struct fdir* fd,const char* name,uint size,uint type)
     uint dsize = PGROUNDUP(f->bpb.root_entry_count*sizeof(struct fat_dir));
     uint fat1 = SWT_BLOCK(f->first_fat_sector,f->bpb.bytes_per_sector);
     uint fat2 = SWT_BLOCK(f->second_fat_sector,f->bpb.bytes_per_sector);
-    uint fsize = PGROUNDUP(f->fat_size * f->bpb.bytes_per_sector);
+    uint fsize = BGROUNDUP(f->fat_size * f->bpb.bytes_per_sector);
 
     uint  cs = dir->size;
 
@@ -224,13 +223,42 @@ fat_create(struct fdir* fd,const char* name,uint size,uint type)
     }
 
     fdir_create(fd,type,name,size,
-    f->first_data_sector + SWT_BLOCK(tmp->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
+    SWT_BLOCK(f->first_data_sector,f->bpb.bytes_per_sector) 
+    + SWT_BLOCK(tmp->first_clus_low - 2,f->bpb.bytes_per_sector * f->bpb.sectors_per_cluster));
 
-    fs_write_blocks(f->fp,fat1,dir->dev,fsize);
-    fs_write_blocks(f->fp,fat2,dir->dev,fsize);
+    if (type == FT_DIR) {
+        char* cur = kalloc(PGROUNDUP(size));
+        uint  c = FAT2DATB(f,tmp->first_clus_low);
+        fs_read_blocks(cur,c,dir->dev,PGROUNDUP(size));
+        // .
+        struct fat_dir*  dot = (struct fat_dir*)cur;
+        memcpy(dot,tmp,sizeof(struct fat_dir));
+        dot->attr = ATTR_DIRECTORY;
+        // why this beacuse the system define 
+        strncpy(dot->name,FAT_CUR_DIR,11);
+        dot++;
+        // ..
+        memcpy(dot,tmp,sizeof(struct fat_dir));
+        strncpy(dot->name,FAT_PRE_DIR,11);
+        dot->file_size = fd->cur[0].size;
+        dot->attr = ATTR_DIRECTORY;
+        fs_write_blocks(cur,c,dir->dev,PGROUNDUP(size));
+        
+        kfree(cur,PGROUNDUP(size));
+    }
+
     fs_write_blocks(p,dir->block,dir->dev,PGROUNDUP(cs));
 
     kfree(p,PGROUNDUP(cs));
+
+    // if create error recreate
+    if (!fdir_find(fd,name)) {
+        fat_create(fd,name,size,type);
+    }
+    else {
+        fs_write_blocks(f->fp,fat1,dir->dev,fsize);
+        fs_write_blocks(f->fp,fat2,dir->dev,fsize);
+    }
 }
 
 void
@@ -401,12 +429,16 @@ fat_init_fdir(struct fdir* fd)
     struct fat_dir* start = p;
     struct fat_dir* end = (uint)start + cs;
 
+
     uint val;
     for (;start<end;start++)
     {
         if (*(uint*)start == 0) {
             break;
         }
+        // skip . .. dir
+        else if (!strncmp(start->name,FAT_CUR_DIR,11) || !strncmp(start->name,FAT_PRE_DIR,11))
+            continue;
         // if (f->fat_type == FAT12)
         // {
         // }

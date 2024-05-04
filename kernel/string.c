@@ -41,3 +41,13 @@ strlen(const char *s)
     for(n = 0; s[n]; n++);
     return n;
 }
+
+void
+strupper(char *s) {
+    while (*s) {
+        if ('a' <= *s && *s <= 'z') {
+            *s = *s - ('a' - 'A');
+        }
+        s++;
+    }
+}

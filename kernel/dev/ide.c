@@ -123,7 +123,7 @@ check_drives(void)
         }
 }
 
-void
+uint
 readsect(void *dst, uint offset,uint p,uint d)
 {
     outb(p + ATA_REG_SECCOUNT, 1);   // count = 1
@@ -135,10 +135,11 @@ readsect(void *dst, uint offset,uint p,uint d)
     if(idewait(p))
     {
         vprintf("disk wait err\n");
-        return;
+        return 1;
     }
     // Read 512 B data.
     insl(p + ATA_REG_DATA, dst, SECTSIZE>>2);
+    return 0;
 }
 
 void
@@ -146,10 +147,13 @@ readseg(void* s,uint offset,uint p,uint d,uint c)
 {
     uint i;
     for (i=0;i<c;i++,s+=SECTSIZE)
-        readsect(s,offset+i,p,d);
+        if(readsect(s,offset+i,p,d))  {
+            s-=SECTSIZE;
+            i--;
+        }
 }
 
-void
+uint
 writesect(void* dst,uint offset,uint p,uint d) 
 {
     outb(p + ATA_REG_SECCOUNT, 1);
@@ -161,10 +165,11 @@ writesect(void* dst,uint offset,uint p,uint d)
     if(idewait(p))
     {
         vprintf("disk wait err\n");
-        return;
+        return 1;
     }
     // Write 512 B data.
     outsl(p + ATA_REG_DATA, dst, SECTSIZE>>2);
+    return 0;
 }
 
 void
@@ -172,7 +177,10 @@ writeseg(void* s,uint offset,uint p,uint d,uint c)
 {
     uint i;
     for (i=0;i<c;i++,s+=SECTSIZE)
-        writesect(s,offset+i,p,d);
+        if(writesect(s,offset+i,p,d)) {
+            s-=SECTSIZE;
+            i--;
+        }
 }
 
 uint
