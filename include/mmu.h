@@ -11,20 +11,19 @@
                 (0xC0 | (((lim) >> 28) & 0xf)), (((base) >> 24) & 0xff)
 
 // Eflags register
-#define FL_IF           0x00000200      // Interrupt Enable
+#define         FL_IF           0x00000200      // Interrupt Enable
+        
+#define         STA_X           0x8       // Executable segment
+#define         STA_W           0x2       // Writeable (non-executable segments)
+#define         STA_R           0x2       // Readable (executable segments)
+        
+#define         DPL_USER        0x3     // User DPL
 
-#define STA_X           0x8       // Executable segment
-#define STA_W           0x2       // Writeable (non-executable segments)
-#define STA_R           0x2       // Readable (executable segments)
-
-#define DPL_USER        0x3     // User DPL
-
-#define SEG_NULL        0  // first 
-#define SEG_KCODE       1  // kernel code
-#define SEG_KDATA       2  // kernel data+stack
-// #define SEG_UCODE       3  // kernel data+stack
-// #define SEG_UDATA       4  // kernel data+stack
-#define SEG_FIRST       3
+#define         SEG_NULL        0  // first 
+#define         SEG_KCODE       1  // kernel code
+#define         SEG_KDATA       2  // kernel data+stack
+#define         SEG_UCODE       3  // user code
+#define         SEG_UDATA       4  // user data+stack
 
 #ifndef __ASSEMBLY__
 struct segdesc {
@@ -53,7 +52,7 @@ struct segdesc {
 
 // ----------------------------------------------------------------------------
 // Control Register flags
-#define CR0_PE          0x00000001      // Protection Enable
+#define         CR0_PE          0x00000001      // Protection Enable
 //
 // +--------10------+-------10-------+---------12----------+
 // | Page Directory |   Page Table   | Offset within Page  |
@@ -61,57 +60,57 @@ struct segdesc {
 // +----------------+----------------+---------------------+
 //  \--- PDX(va) --/ \--- PTX(va) --/
 
-#define KSTACKSIZE      4096    //kernel stack size
-#define PGTSIZE         1024    //page table size
+#define         KSTACKSIZE      4096    //kernel stack size
+#define         PGTSIZE         1024    //page table size
 // Control Register flags
-#define CR0_PE          0x00000001      // Protection Enable
-#define CR0_WP          0x00010000      // Write Protect
-#define CR0_PG          0x80000000      // Paging
+#define         CR0_PE          0x00000001      // Protection Enable
+#define         CR0_WP          0x00010000      // Write Protect
+#define         CR0_PG          0x80000000      // Paging
 // Page table/directory flags.
-#define PTE_P           0x001   // Present
-#define PTE_W           0x002   // Writeable
-#define PTE_U           0x004   // User
-#define PTE_PS          0x080   // Page Size 4MB
+#define         PTE_P           0x001   // Present
+#define         PTE_W           0x002   // Writeable
+#define         PTE_U           0x004   // User
+#define         PTE_PS          0x080   // Page Size 4MB
 // Address in page table or page directory entry
-#define PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)
-#define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF)
+#define         PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)
+#define         PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF)
 
-#define PTSHIFT         12      // offset of Page Table in a linear address
-#define PDSHIFT         22      // offset of Page Directory in a linear address
-#define PTX(va)         (((uint)(va) >> PTSHIFT) & 0x3FF)
-#define PDX(va)         (((uint)(va) >> PDSHIFT) & 0x3FF)
+#define         PTSHIFT         12      // offset of Page Table in a linear address
+#define         PDSHIFT         22      // offset of Page Directory in a linear address
+#define         PTX(va)         (((uint)(va) >> PTSHIFT) & 0x3FF)
+#define         PDX(va)         (((uint)(va) >> PDSHIFT) & 0x3FF)
 // construct virtual address from indexes and offset
-#define PGADDR(d, t, o) ((uint)((d) << PDSHIFT | (t) << PTSHIFT | (o)))
+#define         PGADDR(d, t, o) ((uint)((d) << PDSHIFT | (t) << PTSHIFT | (o)))
 
-#define PGSIZE          4096            // bytes mapped by a page
-#define P4MSIZE         0x400000        // 4MB page 
-#define CR4_PSE         0x00000010      // Page size extension
+#define         PGSIZE          4096            // bytes mapped by a page
+#define         P4MSIZE         0x400000        // 4MB page 
+#define         CR4_PSE         0x00000010      // Page size extension
 
-#define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
-#define PGROUNDDOWN(sz) (((sz)) & ~(PGSIZE-1))
+#define         PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
+#define         PGROUNDDOWN(sz) (((sz)) & ~(PGSIZE-1))
 
 // may be 224 M is enough total 512 M , but point to virtual memory
-#define PHYSTOP         0xE000000       // Top physical memory
+#define         PHYSTOP         0xE000000       // Top physical memory
 // is larger than 512M maybe no use but 80386 reserve this address
-#define DEVSPACE        0xFE000000      // Other devices are at high addresses
-#define IOSPACE         0x100000        // IO SPACE
+#define         DEVSPACE        0xFE000000      // Other devices are at high addresses
+#define         IOSPACE         0x100000        // IO SPACE
 
 // kernel base address
-#define KPSIZE          2
+#define         KPSIZE          2
 // you need to change kernel.ld too
-#define KBASE           0xc0000000
-#define KINDEX          (KBASE>>PDSHIFT)
-#define KLINK           (KBASE + IOSPACE)
-#define V2P(a)          (((uint) (a)) - KBASE)
-#define V2PS(a)         ((a) - KBASE)
-#define P2V(a)          ((void *)(((char *) (a)) + KBASE))
-#define P2VS(a)         ((a) + KBASE)
+#define         KBASE           0xc0000000
+#define         KINDEX          (KBASE>>PDSHIFT)
+#define         KLINK           (KBASE + IOSPACE)
+#define         V2P(a)          (((uint) (a)) - KBASE)
+#define         V2PS(a)         ((a) - KBASE)
+#define         P2V(a)          ((void *)(((char *) (a)) + KBASE))
+#define         P2VS(a)         ((a) + KBASE)
 
 // ----------------------------------------------------------------------------
 
-#define SYS_TSS         0x9     // Available 32-bit TSS
-#define SYS_INT         0xE     // 32-bit Interrupt Gate
-#define SYS_TRAP        0xF     // 32-bit Trap Gate
+#define         SYS_TSS         0x9     // Available 32-bit TSS
+#define         SYS_INT         0xE     // 32-bit Interrupt Gate
+#define         SYS_TRAP        0xF     // 32-bit Trap Gate
 
 #ifndef __ASSEMBLY__
 // Gate descriptors for interrupts and traps

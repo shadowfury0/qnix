@@ -1,6 +1,8 @@
 #include "types.h"
+#include "elf32.h"
 #include "io.h"
 #include "mmu.h"
+#include "proc.h"
 #include "dev/ide.h"
 #include "fs/fat.h"
 #include "fs/fs.h"
@@ -18,46 +20,35 @@ count(char** argv)
 struct fdir  root;
 
 int
-exec(uint eip,char* path,char** argv)
+exec1(char* path,char** argv)
 {
-    sti();
-    sleep(1);
-    
+    int* pgdir;
+    if((pgdir = setupkvm()) == 0)
+        goto bad;
+
     fat_init(&root,1,"root");
     fat_init_fdir(&root);
+    char* p = alloc_page();
+    fat_read(&root,"_TEST       ",p,root.cur[2].size);
 
-    char* name = "a.txt";
-    strupper(name);
-    fat_create(&root,name,2048,FT_FILE);
-    // fat_delete(&root,name);
-    fat_create(&root,"TMP",2048,FT_DIR);
+    uint sz = 0;
+    if ((sz = allocuvm(pgdir,sz,root.cur[2].size)) == 0)
+        goto bad;
 
-    // fat_create(&root,"a.txt",4096,FT_FILE);
-    
-    // fat_create(root.cur[2].p->cur[2].p,"c.txt",2048,FT_FILE);
+    struct proc* proc = get_cur_proc();
+    free_page(proc->pgdir);
+    // change the pgdir
+    proc->pgdir = pgdir;
+    switchkvm(pgdir);
+    loaduvm(pgdir,p,sz);
 
-    // fat_create(root.cur[2].p,"opt",2048,FT_DIR);
-    // fat_create(root.cur[2].p,"a.txt",2048,FT_FILE);
-    // fnode_dump(&root.cur[2].p->cur[2]);
-
-    // fs_ls(&root);
-    // fs_tree(&root,0);
-
-    // char* buf = alloc_page();
-    // char* nn = "vvddds"; 
-    // fat_read(&root,"A           ",buf,7);
-    // fat_write(&root,"A           ",nn,6);
-    // vprintf("%d \n",buf[1]);
-    // free_page(buf);
-    
-
-    // fat_delete(&root,"tmp");
-
-    // fnode_dump(&root.cur[2].p->cur[2].p->cur[2]);
+    struct elf32_hdr* elf;
+    proc->tss.eip = elf->e_entry;
+//  jmp direct
+    swtch(&proc->tss);
+bad:
+    free_page(p);
     fat_clean(1);
-
-    for(;;)
-        ;
-
+    
     return -1;
 }

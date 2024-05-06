@@ -1,15 +1,19 @@
-.globl swtch,fork,wait,yield
+.globl swtch,fork,wait,yield,exec
 
 # switch the eip register with the first address
 swtch:
+    cli
+
     movl    (%esp), %eax
     movl    4(%esp),%edx
     addl    $8,%esp
+
 # esp
     movl    0x38(%edx),%esp
 # eip
     pushl   0x20(%edx)
     movl    %eax,0x20(%edx)
+
 # eax
     movl    0x28(%edx),%eax
 # ecx
@@ -19,12 +23,14 @@ swtch:
 # ebp
     movl    0x3c(%edx),%ebp
 # esi
-    movl    0x40(%edx),%edi
+    movl    0x40(%edx),%esi
 # edi 
-    movl    0x44(%edx),%esi
+    movl    0x44(%edx),%edi
+
 # edx
     xchgl   0x30(%edx),%edx
 
+    sti
     ret
 
 #   put cur eip into first argument
@@ -53,6 +59,7 @@ fork:
     addl    $4,%esp
     popl    %esp
 
+    sti
     ret
 
 wait:
@@ -82,3 +89,7 @@ yield:
     call    yield1
     addl    $0x28,%esp
     jmp     schedule
+
+exec:
+    addl    $4,%esp
+    call    exec1

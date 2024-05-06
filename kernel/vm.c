@@ -20,6 +20,8 @@
 // kernel page directory
 int* kpgdir;
 
+extern char kend[];
+
 // global gdt 
 struct segdesc* kgdt;
 
@@ -32,8 +34,8 @@ seginit(void)
     kgdt[SEG_NULL]  = SEG(0,0,0,0);
     kgdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
     kgdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
-    // gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
-    // gdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
+    // kgdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
+    // kgdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
 
     // alloc 4096 size
     lgdt(kgdt,PGSIZE);
@@ -89,11 +91,12 @@ setupkvm(void)
 
     memset(pgdir,0,PGSIZE);
     if (P2V(PHYSTOP) > (void*)DEVSPACE)
-        panic("kernel start is too high");
+        panic("PHYSTOP too high");
     
     // first page
     if(mappages(pgdir,0,0,P4MSIZE,PTE_W)||mappages(pgdir,KBASE,0,P4MSIZE,PTE_W))   {
-        panic("kernel page init error");
+        freevm(pgdir);
+        return 0;
     }
     return pgdir;
 }
@@ -103,7 +106,7 @@ kvminit(void)
 {
     kpgdir = setupkvm();
     // load cr3
-    lcr3(V2P(kpgdir));
+    switchkvm(kpgdir);
     // other pages
     int i;
     uint ps;
@@ -119,8 +122,19 @@ kvminit(void)
     // }
 }
 
+void
+switchkvm(void* kpgdir)
+{
+    // switch to the kernel page table
+    lcr3(V2P(kpgdir));
+}
+
+// Deallocate user pages to bring the process size from oldsz to
+// newsz.  oldsz and newsz need not be page-aligned, nor does newsz
+// need to be less than oldsz.  oldsz can be larger than the actual
+// process size.  Returns the new process size.
 int
-deallocvm(int* pgdir, uint oldsz, uint newsz)
+deallocuvm(int* pgdir, uint oldsz, uint newsz)
 {
     int* pte;
     uint a, pa;
@@ -135,37 +149,48 @@ deallocvm(int* pgdir, uint oldsz, uint newsz)
             a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
         else if((*pte & PTE_P) != 0) {
             pa = PTE_ADDR(*pte);
-            if(pa == 0)
-                panic("kfree");
-            char *v = P2V(pa);
-            free_page(v);
+            // if(pa == 0)
+            //     panic("kfree");
+            char* v = P2V(pa);
+            if(pa >= PGROUNDUP((uint)kend)) {
+                free_page(v);
+            }
             *pte = 0;
         }
     }
     return newsz;
 }
 
+// Allocate page tables and physical memory to grow process from oldsz to
+// newsz, which need not be page aligned.  Returns new size or 0 on error.
 int
-allocvm(int *pgdir, uint oldsz, uint newsz)
+allocuvm(int *pgdir, uint oldsz, uint newsz)
 {
     char* mem;
-    uint  s;
+    int*  pte;
+    uint  s,pa;
     if (newsz > KBASE)
         return 0;
     else if (newsz < oldsz)
         return oldsz;
 
-    s = PGROUNDUP(newsz);
+    s = PGROUNDUP(oldsz);
     for (;s < newsz; s += PGSIZE) {
-        if ((mem = alloc_page() == 0)) {
+        // clean the current page for user
+        deallocuvm(pgdir,s+PGSIZE,s);
+
+        mem = alloc_page();
+        if (mem == 0) {
             vprintf("allocate out of memory\n");
-            deallocvm(pgdir, newsz, oldsz);
+            deallocuvm(pgdir, newsz, oldsz);
             return 0;
         }
+        // clean for the user space to map
         memset(mem,0,PGSIZE);
+        // map user space
         if (mappages(pgdir,(char*)s,V2P(mem),PGSIZE,PTE_W|PTE_U)) {
             vprintf("allocate out of memory (2)\n");
-            deallocvm(pgdir, newsz, oldsz);
+            deallocuvm(pgdir, newsz, oldsz);
             free_page(mem);
             return 0;
         }
@@ -173,6 +198,38 @@ allocvm(int *pgdir, uint oldsz, uint newsz)
     return newsz;
 }
 
+// load the memory from user space
+// user space start from 0
+int
+loaduvm(int* pgdir,char *addr,uint sz)
+{
+    if((uint) addr % PGSIZE != 0)
+        panic("loaduvm: addr must be page aligned");
+
+    uint i;
+    sz = PGROUNDUP(sz);
+    for(i = 0; i < sz; i += PGSIZE){
+        if(findpage(pgdir, addr+i, 0) == 0)
+            panic("loaduvm: address should exist");
+        
+        memmove(i,addr,PGSIZE);
+    }
+}
+
+// copy the page table
+int*
+copyuvm(int *pgdir, uint sz)
+{
+    int* d;
+    if((d = alloc_page()) == 0)
+        return 0;
+    memcpy(d,pgdir,PGSIZE);
+    return d;
+// bad:
+//     freevm(d);
+}
+
+// free the all page table memory
 void
 freevm(int* pgdir)
 {

@@ -25,7 +25,7 @@ welcome_init(void)
 void 
 main(void) 
 {
-    kminit1(kend,P2V(3*1024*1024));    
+    kminit1(kend,P2V(4*1024*1024));    
 
     kvminit();
     seginit();
@@ -41,7 +41,7 @@ main(void)
     rtc_init();
     ide_init();
     
-    sti();
+    // sti();
     user_init();
     schedule();
 }

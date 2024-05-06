@@ -26,6 +26,8 @@ rtc_init(void)
     outb(RTC_DATAP, 0x12);
 
     rtc_dump();
+    
+    rtc_date();
 }
 
 static inline uchar 
@@ -80,6 +82,7 @@ rtctrap(void)
     // check uip
     while(rtc_ready());
     t_clock.tick++;
+
     rtc_date();
     rtc_dump();
     piceoi();

@@ -7,9 +7,9 @@ _start:
 	movw    %ax,%es             # -> Extra Segment
 	movw    %ax,%ss             # -> Stack Segment
 
-#开启32位模式
+# turn on 32 bit
 	lgdt    gdtdesc
-#跳转之前必须把中断关掉
+# turn off the IF FALG
 	cli
 	movl    %cr0, %eax
 	orl     $CR0_PE, %eax
@@ -26,7 +26,7 @@ start32:
 	movw    %ax, %fs                # -> FS
 	movw    %ax, %gs                # -> GS	 
 
-# 读取硬盘扇区的函数
+# read disk 
 	call	bootmain
 
 fin:

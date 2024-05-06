@@ -31,6 +31,8 @@ schedule(void)
             // switch cur process
             curproc = p;
             p->state = RUNNING;
+            // switch page table
+            switchkvm(p->pgdir);    
             swtch(&p->tss);
         }
 
@@ -39,13 +41,14 @@ schedule(void)
             if (p->state != ZOMBIE) 
                 continue;
             p->parent->state = RUNNABLE;
-            // clear stack
+            // clean stack
             free_page(PGROUNDUP(p->tss.esp-PGSIZE));
+            freevm(p->pgdir);
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
         }
-
+        
     }
 }
 
@@ -67,6 +70,7 @@ proc_init(void)
     {
         ptable[i].state = UNUSED;
         ptable[i].pid = 0;
+        ptable[i].pgdir = 0;
         ptable[i].parent = 0;
     }
 }
@@ -111,25 +115,24 @@ found:
     return p;
 }
 
-// usr enter space
-void umain(void);
-void test(void);
-
+// first user program
 void
 user_init(void)
 {
     struct proc* p;
     if((p = allocproc()) == 0)
-        panic("user init error");
-    
+        panic("user init: error");
+    if((p->pgdir = setupkvm()) == 0)
+        panic("user init: out of memory?");
     // don't change this is point to 0x0 address for user enter size is fixed  
     memmove(0,&umain, 0x1a);
-    // is the first process need point itself
+
     p->tss.eip = 0;
+    // is the first process need point itself
     curproc = p;
     p->parent = p;
 
-    p->state = RUNNABLE;
+    p->state = EMBRYO;
 }
 
 int
@@ -139,6 +142,14 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
 
     if((cp = allocproc()) == 0)
         return -1;
+
+    // Copy process state from proc.
+    if((cp->pgdir = copyuvm(curproc->pgdir)) == 0){
+        free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        cp->tss.esp = 0;
+        cp->state = UNUSED;
+        return -1;
+    }
 
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
@@ -154,6 +165,10 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
     cp->tss.ebp = ebp;
     cp->tss.esi = esi;
     cp->tss.edi = edi;
+    cp->tss.es = curproc->tss.es;
+    cp->tss.cs = curproc->tss.cs;
+    cp->tss.ds = curproc->tss.ds;
+    cp->tss.ss = curproc->tss.ss;
 
     return cp->pid;
 }
@@ -224,7 +239,7 @@ wait1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,ui
     }
     return 0;
 }
-
+ 
 void
 yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,uint esp)
 {
@@ -272,6 +287,12 @@ procdump(void)
         // }
         // vprintf("\n");
     }
+}
+
+struct proc*
+get_cur_proc(void)
+{
+    return  curproc;
 }
 
 int

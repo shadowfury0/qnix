@@ -4,11 +4,11 @@
 umain:
     movl    $init,%edx
     movl    $argv,%ecx
-    movl    $SYS_EXEC, %eax
+    movl    $SYS_exec, %eax
     int     $T_SYSCALL
 
 exit:
-    movl    $SYS_EXIT,%eax
+    movl    $SYS_exit,%eax
     int     $T_SYSCALL
     jmp     exit
 
