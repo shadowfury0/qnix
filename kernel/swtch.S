@@ -89,7 +89,3 @@ yield:
     call    yield1
     addl    $0x28,%esp
     jmp     schedule
-
-exec:
-    addl    $4,%esp
-    call    exec1

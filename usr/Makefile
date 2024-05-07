@@ -13,7 +13,7 @@ all:
 	${CC} usys.S ${CCOPTS} -o usys.o
 	${CC} test.c ${CCOPTS} -o test.o
 
-# test:CCOPTS += -g
+test:CCOPTS += -g
 test:all
 	${LD} ${LDOPTS} -T usr.ld -o _TEST usys.o test.o
 # ${OBJDUMP} -d -M att _TEST > test.asm

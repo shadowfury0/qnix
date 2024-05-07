@@ -13,7 +13,7 @@ system_call:
     push    %ds
 	push    %es
 	push    %fs
-#   call    parameter
+
 # 3
 	pushl   %ebx
 # 2
@@ -27,8 +27,3 @@ system_call:
     pop     %es
     pop     %ds
     iret
-    
-# sys exec
-sys_exec:
-    call    exec
-    ret

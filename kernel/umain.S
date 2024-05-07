@@ -14,7 +14,8 @@ exit:
 
 # char init[] = "/init\0";
 init:
-    .string "/init\0"
+#    .string "/init\0"
+    .string "_TEST       "
 # char *argv[] = { init, 0 };   
 argv:
     .long   init

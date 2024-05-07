@@ -6,8 +6,6 @@
 // usr main function
 extern void umain(void);
 
-extern struct segdesc* kgdt;
-
 // process arrays
 struct proc ptable[PT_SIZE];
 // first process
@@ -32,7 +30,8 @@ schedule(void)
             curproc = p;
             p->state = RUNNING;
             // switch page table
-            switchkvm(p->pgdir);    
+            if (!p->pgdir)
+                switchkvm(p->pgdir);    
             swtch(&p->tss);
         }
 
@@ -43,7 +42,9 @@ schedule(void)
             p->parent->state = RUNNABLE;
             // clean stack
             free_page(PGROUNDUP(p->tss.esp-PGSIZE));
-            freevm(p->pgdir);
+            if (!p->pgdir)
+                freevm(p->pgdir);
+            p->pgdir = 0;
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
@@ -61,11 +62,7 @@ proc_init(void)
     if (PT_SIZE * sizeof(struct segdesc) >  PGSIZE)
         panic("process table is larger than a page");
 
-    int i;
-    // for (i = 3;i<PT_SIZE;i++) {
-    //     kgdt[i] = SEG(0,0,0,0);
-    // }
-
+    uint i;
     for (i=0;i<PT_SIZE;i++)
     {
         ptable[i].state = UNUSED;
@@ -108,10 +105,6 @@ found:
     p->tss.ss   = SEG_KDATA << 3;
     p->tss.gs   = SEG_KDATA << 3;
     
-    // load tss
-    // kgdt[SEG_FIRST+tssid] = SEG(SYS_TSS,&p->tss,0x68,0);
-    // ltr(SEG_FIRST);
-
     return p;
 }
 

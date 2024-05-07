@@ -4,6 +4,6 @@ void
 main(void)
 {
     time();
-    for(;;)
-        ;
+    exec("_DEMO       ",0);
+    exit();
 }
