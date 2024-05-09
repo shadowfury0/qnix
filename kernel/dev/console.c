@@ -138,3 +138,9 @@ vprintf(char* str,...)
     }
 }
 
+int
+sys_printf(int arg)
+{
+    vprintf("%d  \n",arg);
+    return 0;
+}

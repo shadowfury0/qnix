@@ -21,6 +21,13 @@ sys_wait(void)
 }
 
 int
+sys_yield(void)
+{
+    yield();
+    return 0;
+}
+
+int
 sys_getpid(void)
 {
     return getpid();

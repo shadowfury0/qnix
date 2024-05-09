@@ -218,15 +218,13 @@ loaduvm(int* pgdir,char *addr,uint sz)
 
 // copy the page table
 int*
-copyuvm(int *pgdir, uint sz)
+copypg(int *pgdir)
 {
     int* d;
     if((d = alloc_page()) == 0)
         return 0;
     memcpy(d,pgdir,PGSIZE);
     return d;
-// bad:
-//     freevm(d);
 }
 
 // free the all page table memory

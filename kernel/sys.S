@@ -17,9 +17,9 @@ system_call:
 # 3
 	pushl   %ebx
 # 2
-	pushl   %ecx
+	pushl   %edx
 # 1
-    pushl   %edx    
+    pushl   %ecx    
     call    syscall_table(,%eax,4)
     addl    $0x0c,%esp
 

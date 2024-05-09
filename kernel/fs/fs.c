@@ -64,7 +64,7 @@ fdir_find(struct fdir* fd,const char* name)
             break;
         }
     }
-    return c;
+    return (struct fnode*)c;
 }
 
 // return cur id in fdir

@@ -135,9 +135,9 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
 
     if((cp = allocproc()) == 0)
         return -1;
-
+ 
     // Copy process state from proc.
-    if((cp->pgdir = copyuvm(curproc->pgdir)) == 0){
+    if((cp->pgdir = copypg(curproc->pgdir)) == 0){
         free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
         cp->tss.esp = 0;
         cp->state = UNUSED;
