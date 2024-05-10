@@ -3,6 +3,7 @@
 void
 main(void)
 {
+<<<<<<< HEAD
     // attention must volatile fork
     volatile int pid = fork();
 
@@ -25,4 +26,20 @@ main(void)
         }
     }
 
+=======
+    int pid = fork();
+    if (pid == 0)
+    {
+        printf(pid);
+        exit();
+    }
+    else if (pid > 0) {
+        // int n = yield();
+        // time();
+        // exit();
+        printf(pid);
+    }
+    for(;;)
+        ;
+>>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
 }

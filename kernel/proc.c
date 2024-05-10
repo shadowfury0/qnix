@@ -34,11 +34,17 @@ schedule(void)
             // switch page table
             // swtich user page table first
             if (p->upgdir)
+<<<<<<< HEAD
             {
                 switchkvm(p->upgdir);
             }
             else if (p->pgdir)
                 switchkvm(p->pgdir);
+=======
+                switchkvm(p->upgdir);    
+            else if (p->pgdir)
+                switchkvm(p->pgdir);    
+>>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
             swtch(&p->tss);
         }
 
@@ -157,6 +163,7 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
         return -1;
     }
 
+<<<<<<< HEAD
     // must not zero
     if (curproc->upgdir)
         if ((cp->upgdir = copypg(curproc->upgdir)) == 0)
@@ -169,6 +176,17 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
             cp->state = UNUSED;
             return -1;
         }
+=======
+    if ((cp->upgdir = copypg(curproc->upgdir)) == 0)
+    {
+        free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        free_page(cp->pgdir);
+        cp->pgdir = 0;
+        cp->tss.esp = 0;
+        cp->state = UNUSED;
+        return -1;
+    }
+>>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
 
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
@@ -275,9 +293,13 @@ yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,u
     curproc->tss.edx = edx;
     curproc->tss.ebx = ebx;
 
+<<<<<<< HEAD
     if (curproc->upgdir)
         switchkvm(curproc->upgdir);
     else if (curproc->pgdir)
+=======
+    if (curproc->pgdir)
+>>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
         switchkvm(curproc->pgdir);
     else    
         panic("kernel page dir not found");

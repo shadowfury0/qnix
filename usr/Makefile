@@ -9,7 +9,11 @@ LDOPTS = -m elf_i386 -N
 OBJCOPY = objcopy
 OBJDUMP = objdump
 
+<<<<<<< HEAD
 all:CCOPTS += -g
+=======
+# all:CCOPTS += -g
+>>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
 all:
 	${CC} ${SYSCALL} ${CCOPTS} -o usys.o
 
