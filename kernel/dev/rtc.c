@@ -87,7 +87,6 @@ rtctrap(void)
     rtc_dump();
     piceoi();
 
-    sti();
     yield();
 }
 
@@ -145,4 +144,12 @@ sys_time(void)
 {
     printdate();
     return  0;
+}
+
+int
+sys_sleep(uint i)
+{
+    sti();
+    sleep(i);
+    return 0;
 }

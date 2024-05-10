@@ -37,6 +37,7 @@ struct proc {
     volatile enum procstate state;
     uint pid;
     int* pgdir;                     // page table
+    int* upgdir;                    // user page table
     struct  proc*  parent;  
     // struct gatedesc* ldt;        // ldt address
     struct tss tss;

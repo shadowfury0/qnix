@@ -13,9 +13,21 @@ CPUS = 1
 GDBPORT = 2500
 BOCHS	= 	bochs -f .bochsrc
 
+TMPDIR = tmp
+
 fs.img:
 	bximage -mode=create fs.img -hd=32
 	mkfs.fat fs.img
+
+usr:
+	${MAKE} -C usr
+	if [ -d "${TMPDIR}/" ];then\
+		umount ${TMPDIR};\
+		rm -rf ${TMPDIR};\
+	fi
+	mkdir ${TMPDIR}
+	mount -t vfat fs.img ${TMPDIR}
+	cp usr/_* ${TMPDIR}
 
 all:
 	${MAKE} -C include
@@ -63,6 +75,11 @@ debug:
 clean:
 	${MAKE} -C boot clean
 	${MAKE} -C kernel clean
-	rm -f *.tags *.log 
+	${MAKE} -C usr clean
+	if [ -d "${TMPDIR}/" ];then\
+		umount ${TMPDIR};\
+		rm -rf ${TMPDIR};\
+	fi
+	rm -f *.tags *.log fs.img
 
-.PHONY: clean img gdb all fs.img
+.PHONY: clean img usr gdb all fs.img

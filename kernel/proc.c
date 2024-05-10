@@ -19,6 +19,7 @@ schedule(void)
     volatile struct proc *p;
 
     for(;;) {
+        cli();
         for (p = ptable; p < &ptable[PT_SIZE]; p++) {
             if (p->state == EMBRYO) {
                 p->state = RUNNABLE;
@@ -29,9 +30,15 @@ schedule(void)
             // switch cur process
             curproc = p;
             p->state = RUNNING;
+
             // switch page table
-            if (!p->pgdir)
-                switchkvm(p->pgdir);    
+            // swtich user page table first
+            if (p->upgdir)
+            {
+                switchkvm(p->upgdir);
+            }
+            else if (p->pgdir)
+                switchkvm(p->pgdir);
             swtch(&p->tss);
         }
 
@@ -44,12 +51,14 @@ schedule(void)
             free_page(PGROUNDUP(p->tss.esp-PGSIZE));
             if (!p->pgdir)
                 freevm(p->pgdir);
+            if (!p->upgdir)
+                freevm(p->upgdir);
             p->pgdir = 0;
+            p->upgdir = 0;
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
         }
-        
     }
 }
 
@@ -68,6 +77,7 @@ proc_init(void)
         ptable[i].state = UNUSED;
         ptable[i].pid = 0;
         ptable[i].pgdir = 0;
+        ptable[i].upgdir = 0;
         ptable[i].parent = 0;
     }
 }
@@ -120,6 +130,7 @@ user_init(void)
     // don't change this is point to 0x0 address for user enter size is fixed  
     memmove(0,&umain, 0x1a);
 
+    p->upgdir = 0;
     p->tss.eip = 0;
     // is the first process need point itself
     curproc = p;
@@ -132,17 +143,32 @@ int
 fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
 {
     struct proc* cp;
-
     if((cp = allocproc()) == 0)
         return -1;
-
+ 
     // Copy process state from proc.
-    if((cp->pgdir = copyuvm(curproc->pgdir)) == 0){
+    if((cp->pgdir = copypg(curproc->pgdir)) == 0)
+    {
         free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        cp->pgdir = 0;
+        cp->upgdir = 0;
         cp->tss.esp = 0;
         cp->state = UNUSED;
         return -1;
     }
+
+    // must not zero
+    if (curproc->upgdir)
+        if ((cp->upgdir = copypg(curproc->upgdir)) == 0)
+        {
+            free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+            free_page(cp->pgdir);
+            cp->pgdir = 0;
+            cp->upgdir = 0;
+            cp->tss.esp = 0;
+            cp->state = UNUSED;
+            return -1;
+        }
 
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
@@ -162,7 +188,6 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
     cp->tss.cs = curproc->tss.cs;
     cp->tss.ds = curproc->tss.ds;
     cp->tss.ss = curproc->tss.ss;
-
     return cp->pid;
 }
 
@@ -199,6 +224,7 @@ exit(void)
     // parent wake up
     wakeup(p->parent);
 
+    switchkvm(p->pgdir);
     p->tss.eip = &schedule;
     p->state = ZOMBIE;
     swtch(&p->tss);
@@ -248,6 +274,13 @@ yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,u
     curproc->tss.ecx = ecx;
     curproc->tss.edx = edx;
     curproc->tss.ebx = ebx;
+
+    if (curproc->upgdir)
+        switchkvm(curproc->upgdir);
+    else if (curproc->pgdir)
+        switchkvm(curproc->pgdir);
+    else    
+        panic("kernel page dir not found");
 }
 
 void

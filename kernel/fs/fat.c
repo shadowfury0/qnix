@@ -467,40 +467,6 @@ fat_init_fdir(struct fdir* fd)
     kfree(p,cs);
 }
 
-// test
-void
-fat_test(struct fat_info* f,struct fat_dir* dir)
-{
-    // // find directory file
-    // uint root = SWT_BLOCK(f->first_root_sector,f->bpb.bytes_per_sector);
-    // uint dsize = PGROUNDUP(f->bpb.root_entry_count*sizeof(struct fat_dir));
-    // char* dp = kalloc(dsize);
-    // fs_read_blocks(f,dp,root,dsize);
-
-    // uint fat1 = SWT_BLOCK(f->first_fat_sector,f->bpb.bytes_per_sector);
-    // uint fat2 = SWT_BLOCK(f->second_fat_sector,f->bpb.bytes_per_sector);
-    // uint fsize = PGROUNDUP(f->fat_size * f->bpb.bytes_per_sector);
-    // char* fp = kalloc(fsize);
-    // fs_read_blocks(f,fp,fat1,fsize);
-
-    // fat_clus_create_file(f,fp,dp,dir);
-    // // char buf[100] = "1aaaaaaaaaaaaaaa";
-    // // fat_clus_write_file(f,dp,dir,buf,100);
-    // // uint c = fat_find_name(f,dp,"mydir");
-    // // vprintf("%d \n",f->first_data_sector);
-    // // vprintf("%d \n",f->first_root_sector);
-    // // char* t = kalloc();
-    
-    // fat_dir_dump(f,dp);
-
-    // fs_write_blocks(f,dp,root,dsize);
-    // fs_write_blocks(f,fp,fat1,fsize);
-    // fs_write_blocks(f,fp,fat2,fsize);
-
-    // kfree(dp,dsize);
-    // kfree(fp,fsize);
-}
-
 //-----------------------------------------------------------------------------
 // checksum()
 // Returns an unsigned byte checksum computed on an unsigned byte

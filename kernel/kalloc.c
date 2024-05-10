@@ -67,7 +67,7 @@ freerange(void* start,void* end)
 char*
 alloc_page(void)
 {
-    struct km_node* m;
+    volatile struct km_node* m;
     m = kmem.h;
     if (m == 0)
         return 0;
@@ -79,7 +79,7 @@ alloc_page(void)
     }
     else {
         struct km_node* e;
-        e = m + PGSIZE;
+        e = (uint)m + PGSIZE;
         e->size = m->size - PGSIZE;
         e->next = m->next;
         kmem.h  = e;
@@ -142,7 +142,7 @@ kalloc(uint size)
         }
         else if (m->size > s) {
             struct km_node* e;
-            e = m + s;
+            e = (uint)m + s;
             e->size = m->size - s;
             e->next = m->next;
             kmem.h = e;

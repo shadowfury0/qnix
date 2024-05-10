@@ -4,26 +4,24 @@
 
 error_call:
     movl    $-1,%eax
+    addl    $0x0c,%esp
     iret
 # int 0x80
 system_call:
+    cli
     cmpl    $syscall_table_size,%eax
     ja      error_call
 
-    push    %ds
-	push    %es
-	push    %fs
 
-# 3
-	pushl   %ebx
 # 2
-	pushl   %ecx
+    pushl   %edx
 # 1
-    pushl   %edx    
+    pushl   %ecx
+# 3
+#   pushl   %ebx
     call    syscall_table(,%eax,4)
-    addl    $0x0c,%esp
 
-    pop     %fs
-    pop     %es
-    pop     %ds
+    addl    $0x8,%esp
+
+    sti
     iret
