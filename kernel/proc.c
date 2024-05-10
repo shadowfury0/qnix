@@ -30,7 +30,10 @@ schedule(void)
             curproc = p;
             p->state = RUNNING;
             // switch page table
-            if (!p->pgdir)
+            // swtich user page table first
+            if (p->upgdir)
+                switchkvm(p->upgdir);    
+            else if (p->pgdir)
                 switchkvm(p->pgdir);    
             swtch(&p->tss);
         }
@@ -44,7 +47,10 @@ schedule(void)
             free_page(PGROUNDUP(p->tss.esp-PGSIZE));
             if (!p->pgdir)
                 freevm(p->pgdir);
+            if (!p->upgdir)
+                freevm(p->upgdir);
             p->pgdir = 0;
+            p->upgdir = 0;
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
@@ -68,6 +74,7 @@ proc_init(void)
         ptable[i].state = UNUSED;
         ptable[i].pid = 0;
         ptable[i].pgdir = 0;
+        ptable[i].upgdir = 0;
         ptable[i].parent = 0;
     }
 }
@@ -132,13 +139,23 @@ int
 fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
 {
     struct proc* cp;
-
     if((cp = allocproc()) == 0)
         return -1;
  
     // Copy process state from proc.
-    if((cp->pgdir = copypg(curproc->pgdir)) == 0){
+    if((cp->pgdir = copypg(curproc->pgdir)) == 0)
+    {
         free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        cp->tss.esp = 0;
+        cp->state = UNUSED;
+        return -1;
+    }
+
+    if ((cp->upgdir = copypg(curproc->upgdir)) == 0)
+    {
+        free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        free_page(cp->pgdir);
+        cp->pgdir = 0;
         cp->tss.esp = 0;
         cp->state = UNUSED;
         return -1;
@@ -199,6 +216,7 @@ exit(void)
     // parent wake up
     wakeup(p->parent);
 
+    switchkvm(p->pgdir);
     p->tss.eip = &schedule;
     p->state = ZOMBIE;
     swtch(&p->tss);
@@ -248,6 +266,11 @@ yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,u
     curproc->tss.ecx = ecx;
     curproc->tss.edx = edx;
     curproc->tss.ebx = ebx;
+
+    if (curproc->pgdir)
+        switchkvm(curproc->pgdir);
+    else    
+        panic("kernel page dir not found");
 }
 
 void

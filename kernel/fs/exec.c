@@ -40,9 +40,8 @@ exec(char* path,char** argv)
         goto bad;
 
     struct proc* proc = get_cur_proc();
-    free_page(proc->pgdir);
     // change the pgdir
-    proc->pgdir = pgdir;
+    proc->upgdir = pgdir;
     // running
     switchkvm(pgdir);
     loaduvm(pgdir,p,sz);
@@ -54,7 +53,7 @@ exec(char* path,char** argv)
 //  jmp direct
     swtch(&proc->tss);
 bad:
-    free_page(p);
+    // free_page(p);
     fat_clean(1);
     
     return -1;

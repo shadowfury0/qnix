@@ -38,7 +38,10 @@ all:
 	${MAGIC}
 	
 gdb: CCOPTS += -g
-gdb:usr
+gdb:
+	if [ -d "${TMPDIR}/" ];then\
+		umount ${TMPDIR};\
+	fi
 	${MAKE} -C include
 	${MAKE} -C boot	gdb
 	${MAKE} -C kernel gdb
@@ -80,6 +83,6 @@ clean:
 		umount ${TMPDIR};\
 		rm -rf ${TMPDIR};\
 	fi
-	rm -f *.tags *.log 
+	rm -f *.tags *.log fs.img
 
 .PHONY: clean img usr gdb all fs.img

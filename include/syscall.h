@@ -7,4 +7,4 @@
 #define     SYS_exec        4
 #define     SYS_time        5
 #define     SYS_getpid      6
-#define     SYS_printf      7
+#define     SYS_printf      8
