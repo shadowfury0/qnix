@@ -5,7 +5,6 @@ ENTRY(main)
 /* user program general linker */
 SECTIONS
 {
-	/*. = 0x100000 + SIZEOF_HEADERS;*/
 	. = 0x0 + SIZEOF_HEADERS;
 
 	.text :{
@@ -43,5 +42,4 @@ SECTIONS
 	/DISCARD/ : {
 		*(.eh_frame .note.GNU-stack)
 	}
-
 }

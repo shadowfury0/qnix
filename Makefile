@@ -39,9 +39,6 @@ all:
 	
 gdb: CCOPTS += -g
 gdb:
-	if [ -d "${TMPDIR}/" ];then\
-		umount ${TMPDIR};\
-	fi
 	${MAKE} -C include
 	${MAKE} -C boot	gdb
 	${MAKE} -C kernel gdb

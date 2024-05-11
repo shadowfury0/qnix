@@ -23,11 +23,7 @@ struct fdir  root;
 int
 exec(char* path,char** argv)
 {
-<<<<<<< HEAD
-   int* pgdir;
-=======
     int* pgdir;
->>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
     if((pgdir = setupkvm()) == 0)
         goto bad;
 

@@ -138,16 +138,9 @@ vprintf(char* str,...)
     }
 }
 
-<<<<<<< HEAD
-volatile int
-sys_printf(int arg)
-{
-    vprintf("%d \n",arg);
-=======
 int
 sys_printf(int arg)
 {
     vprintf("%d  \n",arg);
->>>>>>> 908ebe526930f5c722e4a4d266951b309b059a3d
     return 0;
 }

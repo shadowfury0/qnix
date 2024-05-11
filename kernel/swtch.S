@@ -35,6 +35,7 @@ swtch:
 
 #   put cur eip into first argument
 fork:
+    cli
 #   esp
     pushl   %esp
 #   eip
@@ -55,11 +56,9 @@ fork:
     popl    %ebx
     popl    %edx
     popl    %ecx
-
     addl    $4,%esp
     popl    %esp
 
-    sti
     ret
 
 wait:
@@ -76,6 +75,7 @@ wait:
     addl    $0x28,%esp
     jmp     schedule
 yield:
+    cli
     pushl   %esp
     pushl   4(%esp)
     pushl   %eax
