@@ -3,9 +3,9 @@
 #include "io.h"
 #include "mmu.h"
 #include "proc.h"
-#include "dev/ide.h"
-#include "fs/fat.h"
-#include "fs/fs.h"
+#include "ide.h"
+#include "fat.h"
+#include "fs.h"
 #include "usr.h"
 
 static int
@@ -18,8 +18,6 @@ count(char** argv)
     return i;
 }
 
-struct fdir  root;
-
 int
 exec(char* path,char** argv)
 {
@@ -27,24 +25,18 @@ exec(char* path,char** argv)
     if((pgdir = setupkvm()) == 0)
         goto bad;
 
-    fat_init(&root,1,"root");
-    fat_init_fdir(&root);
-    char* p = alloc_page();
-
     // find name
-    struct fnode* node = fdir_find(&root,"_INIT       ");
-    fat_read(&root,"_INIT       ",p,node->size);
+    struct proc* proc = fs_read(path);
 
     uint sz = 0;
-    if ((sz = allocuvm(pgdir,sz,node->size)) == 0)
+    if ((sz = allocuvm(pgdir,sz,proc->file->size)) == 0)
         goto bad;
 
-    struct proc* proc = get_cur_proc();
     // change the pgdir
     proc->upgdir = pgdir;
     // running
     switchkvm(pgdir);
-    loaduvm(pgdir,p,sz);
+    loaduvm(pgdir,proc->fp,sz);
 
     struct elf32_hdr* elf;
     proc->tss.eip = elf->e_entry;
@@ -53,8 +45,6 @@ exec(char* path,char** argv)
 //  jmp direct
     swtch(&proc->tss);
 bad:
-    // free_page(p);
-    fat_clean(1); 
     
     return -1;
 }

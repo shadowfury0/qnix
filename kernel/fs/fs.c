@@ -1,8 +1,12 @@
 #include "types.h"
 #include "mmu.h"
+#include "proc.h"
 #include "ide.h"
 #include "fat.h"
 #include "fs.h"
+
+struct fdir  root;
+extern struct proc* curproc;
 
 void
 fs_read_blocks(char* buf,uint offset,uint dev,uint s)
@@ -134,6 +138,117 @@ void
 fs_dfs_dir(struct fdir* fd)
 {
     fat_init_fdir(fd);
+}
+
+// return reading process 
+struct proc*
+fs_read(const char* path)
+{
+    uint cur = root.cur[0].t;
+    struct proc* p = curproc;
+    // read from root dir
+    if (cur == FT_NULL)
+        return 0;
+
+    struct fnode* file = fdir_find(&root,path);
+
+    if(!file)
+    {
+        vprintf("file or directory not found in fs_read\n");
+        return 0;
+    }
+
+    if (file->dev >= IDE_DEV_SIZE)
+    {
+        vprintf("device is not found in fs_read\n");
+        return 0;
+    }
+
+    // is not null
+    if (p->fp)
+        kfree(p->fp,PGROUNDUP(p->file->size));
+
+    p->file = file;
+    if((p->fp = kalloc(PGROUNDUP(file->size))) == 0) 
+    {
+        return 0;
+    }
+
+    if (file->fst == FS_FAT)
+    {
+        fat_read(file,p->fp,file->size);
+    }
+    else {
+        vprintf("file type is not support\n");
+    }
+
+    return p;
+}
+
+struct proc*
+fs_write(const char* path)
+{
+    uint cur = root.cur[0].t;
+    struct proc* p = curproc;
+    // read from root dir
+    if (cur == FT_NULL)
+        return 0;
+
+    struct fnode* file = fdir_find(&root,path);
+
+    if(!file)
+    {
+        vprintf("file or directory not found in fs_read\n");
+        return 0;
+    }
+
+    if (file->dev >= IDE_DEV_SIZE)
+    {
+        vprintf("device is not found in fs_read\n");
+        return 0;
+    }
+
+    // is not null
+    if (p->fp)
+        kfree(p->fp,PGROUNDUP(p->file->size));
+
+    p->file = file;
+    if((p->fp = kalloc(PGROUNDUP(file->size))) == 0) 
+    {
+        return 0;
+    }
+
+    if (file->fst == FS_FAT)
+    {
+        fat_write(file,p->fp,file->size);
+    }
+    else {
+        vprintf("file type is not support\n");
+    }
+
+    return p;
+}
+
+// fs init first
+uint
+fs_init(uint ft,uint n)
+{
+    if (ft == FS_FAT) {
+        fat_init(&root,n,"root");
+        fat_init_fdir(&root);
+        return 1;
+    }
+    else {
+        vprintf("file system type not found\n");
+        return 0;
+    }
+}
+
+void
+fs_clean(uint ft,uint n)
+{
+    if (ft == FS_FAT)
+        fat_clean(1);
 }
 
 void

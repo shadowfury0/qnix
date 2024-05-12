@@ -320,26 +320,20 @@ fat_delete(struct fdir* fd,const char* name)
 
 }
 
+// buf is put write pointer
 void
-fat_write(struct fdir* fd,const char* name,char* buf,uint len)
+fat_write(struct fnode* node,char* buf,uint len)
 {
-    struct fnode* node = fdir_find(fd,name);
-    if(!node)
-    {
-        vprintf("file or directory not found in write function  \n");
-        return;
-    }
-    
-    struct fnode* dir = &fd->cur[0];
-    struct fat_info* f = &fs_info.u[dir->dev].fat;
+    uint devno = node->dev;
+    struct fat_info* f = &fs_info.u[devno].fat;
 
     uint  cs = node->size;
     uint  bs = f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector;
     
-    // if the file size is less than the len
-    if (len > cs)
+    // if the file size is larger than the len
+    if (len < cs)
     {
-        vprintf("file is smaller than write buffer\n");
+        vprintf("file is larger than write buffer\n");
         return;
     }
 
@@ -349,7 +343,7 @@ fat_write(struct fdir* fd,const char* name,char* buf,uint len)
     char* bufstart = buf;
     while (i != EOC_16) {
         memset(p,0,cs);
-        fs_read_blocks(p,i,dir->dev,cs);
+        fs_read_blocks(p,i,devno,cs);
         // copy data
         if (len > bs)
             memcpy(p,bufstart,bs);
@@ -358,7 +352,7 @@ fat_write(struct fdir* fd,const char* name,char* buf,uint len)
 
         len -= bs;
         bufstart += bs;
-        fs_write_blocks(p,i,dir->dev,cs);
+        fs_write_blocks(p,i,devno,cs);
         // find next cluster
         i = FAT16_NEXT(f->fp,DATB2FAT(f,i));
         if (i != EOC_16) i = FAT2DATB(f,i);
@@ -369,25 +363,18 @@ fat_write(struct fdir* fd,const char* name,char* buf,uint len)
 
 // buf is put read pointer
 void
-fat_read(struct fdir* fd,const char* name,void* buf,uint len)
-{
-    struct fnode* node = fdir_find(fd,name);
-    if(!node)
-    {
-        vprintf("file or directory not found in read function  \n");
-        return;
-    }
-    
-    struct fnode* dir = &fd->cur[0];
-    struct fat_info* f = &fs_info.u[dir->dev].fat;
+fat_read(struct fnode* node,void* buf,uint len)
+{   
+    uint devno = node->dev;
+    struct fat_info* f = &fs_info.u[devno].fat;
 
     uint  cs = node->size;
     uint  bs = f->bpb.sectors_per_cluster * f->bpb.bytes_per_sector;
     
-    // if the file size is less than the len
-    if (len > cs)
+    // if the file size is larger than the len
+    if (len < cs)
     {
-        vprintf("file is smaller than read buffer\n");
+        vprintf("file is larger than read buffer\n");
         return;
     }
 
@@ -399,9 +386,9 @@ fat_read(struct fdir* fd,const char* name,void* buf,uint len)
     while (i != EOC_16) {
         // copy data
         if (len > bs)
-            fs_read_blocks(bufstart,i,dir->dev,bs);
+            fs_read_blocks(bufstart,i,devno,bs);
         else
-            fs_read_blocks(bufstart,i,dir->dev,len);
+            fs_read_blocks(bufstart,i,devno,len);
         len -= bs;
         bufstart += bs;
         // find next cluster

@@ -18,7 +18,7 @@ OBJS = 	kernel.ld\
 		vm.c\
 
 CC = gcc
-CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../include  -c -m32  -w
+CCOPTS = -O1 -fno-pic -fno-stack-protector -nostdinc -I../include -I../include/dev -I../include/fs  -c -m32  -w
 LD = ld
 KERNEL_SOURCE = kernelsource
 LDOPTS = -m elf_i386 -N 

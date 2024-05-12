@@ -2,6 +2,9 @@
 #include "io.h"
 #include "mmu.h"
 #include "proc.h"
+#include "ide.h"
+#include "fat.h"
+#include "fs.h"
 
 // usr main function
 extern void umain(void);
@@ -47,15 +50,20 @@ schedule(void)
             p->parent->state = RUNNABLE;
             // clean stack
             free_page(PGROUNDUP(p->tss.esp-PGSIZE));
-            if (!p->pgdir)
+            if (p->pgdir)
                 freevm(p->pgdir);
-            if (!p->upgdir)
+            if (p->upgdir)
                 freevm(p->upgdir);
+            // free the file allocated
+            if (p->fp)
+                kfree(p->fp,PGROUNDUP(p->file->size));
             p->pgdir = 0;
             p->upgdir = 0;
             p->state = UNUSED;
             p->parent = 0;
             p->pid = 0;
+            // clean the file
+            p->file = 0;
         }
     }
 }
@@ -77,6 +85,8 @@ proc_init(void)
         ptable[i].pgdir = 0;
         ptable[i].upgdir = 0;
         ptable[i].parent = 0;
+        ptable[i].fp = 0;
+        ptable[i].file = 0;
     }
 }
 

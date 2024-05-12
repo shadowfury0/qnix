@@ -2,6 +2,9 @@
 #include "io.h"
 #include "tty.h"
 #include "mmu.h"
+#include "ide.h"
+#include "fat.h"
+#include "fs.h"
 
 extern char kend[];
 
@@ -41,9 +44,14 @@ main(void)
     rtc_init();
     ide_init();
     
+    // init 1 index ide
+    fs_init(FS_FAT,1);
+    
     // sti();
     user_init();
     schedule();
+
+    // fs_clean(FS_FAT,1);
 }
 
 __attribute__((__aligned__(PGSIZE)))

@@ -38,7 +38,9 @@ struct proc {
     uint pid;
     int* pgdir;                     // page table
     int* upgdir;                    // user page table
-    struct  proc*  parent;  
+    struct  proc*  parent;
+    struct  fnode* file;            // process file
+    char*   fp;                     // file allocated
     // struct gatedesc* ldt;        // ldt address
     struct tss tss;
     // char comm[TASK_NAME_LEN];

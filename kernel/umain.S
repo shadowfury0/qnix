@@ -2,8 +2,8 @@
 #include "idt.h"
 .globl umain
 umain:
-    movl    $init,%edx
-    movl    $argv,%ecx
+    movl    $init,%ecx
+    movl    $argv,%edx
     movl    $SYS_exec, %eax
     int     $T_SYSCALL
 
@@ -14,8 +14,8 @@ exit:
 
 # char init[] = "/init\0";
 init:
-#    .string "/init\0"
     .string "_INIT       "
+#    .string "/init\0"
 # char *argv[] = { init, 0 };   
 argv:
     .long   init

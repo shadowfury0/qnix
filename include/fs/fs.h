@@ -6,11 +6,11 @@
 #define     FS_FAT          1
 
 
-#define     FILE_NAME_SIZE  16
-#define     CHLD_SIZE       256
-#define     BLOCK_SIZE      512
-#define     BGROUNDUP(sz)  (((sz)+BLOCK_SIZE-1) & ~(BLOCK_SIZE-1))
-#define     BGROUNDDOWN(sz) (((sz)) & ~(BLOCK_SIZE-1))
+#define     FILE_NAME_SIZE      16
+#define     CHLD_SIZE           256
+#define     BLOCK_SIZE          512
+#define     BGROUNDUP(sz)       (((sz)+BLOCK_SIZE-1) & ~(BLOCK_SIZE-1))
+#define     BGROUNDDOWN(sz)     (((sz)) & ~(BLOCK_SIZE-1))
 
 // super information
 struct  fs_info {
