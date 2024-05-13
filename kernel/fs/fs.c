@@ -1,12 +1,10 @@
 #include "types.h"
 #include "mmu.h"
-#include "proc.h"
 #include "ide.h"
 #include "fat.h"
 #include "fs.h"
 
 struct fdir  root;
-extern struct proc* curproc;
 
 void
 fs_read_blocks(char* buf,uint offset,uint dev,uint s)
@@ -140,21 +138,32 @@ fs_dfs_dir(struct fdir* fd)
     fat_init_fdir(fd);
 }
 
-// return reading process 
-struct proc*
-fs_read(const char* path)
+// return reading file name
+// but buf is reading pointer will allocate file size
+// need to free buf after use it
+struct fnode*
+fs_read(const char* path,char** buf)
 {
     uint cur = root.cur[0].t;
-    struct proc* p = curproc;
     // read from root dir
-    if (cur == FT_NULL)
+    if (cur == FT_NULL )
         return 0;
-
+    else if (*buf == 0) 
+    {
+        vprintf("buf pointer is zero\n");
+        return 0;
+    }
     struct fnode* file = fdir_find(&root,path);
 
     if(!file)
     {
         vprintf("file or directory not found in fs_read\n");
+        return 0;
+    }
+
+    if((*buf = kalloc(file->size)) == 0)
+    {
+        vprintf("buf allocate error in fs_read\n");
         return 0;
     }
 
@@ -164,34 +173,24 @@ fs_read(const char* path)
         return 0;
     }
 
-    // is not null
-    if (p->fp)
-        kfree(p->fp,PGROUNDUP(p->file->size));
-
-    p->file = file;
-    if((p->fp = kalloc(PGROUNDUP(file->size))) == 0) 
-    {
-        return 0;
-    }
-
     if (file->fst == FS_FAT)
     {
-        fat_read(file,p->fp,file->size);
+        fat_read(file,*buf,file->size);
     }
     else {
         vprintf("file type is not support\n");
     }
 
-    return p;
+    return file;
 }
 
-struct proc*
-fs_write(const char* path)
+// free the buf size and write into disk
+struct fnode*
+fs_write(const char* path,char** buf)
 {
     uint cur = root.cur[0].t;
-    struct proc* p = curproc;
     // read from root dir
-    if (cur == FT_NULL)
+    if (cur == FT_NULL || *buf == 0)
         return 0;
 
     struct fnode* file = fdir_find(&root,path);
@@ -208,25 +207,19 @@ fs_write(const char* path)
         return 0;
     }
 
-    // is not null
-    if (p->fp)
-        kfree(p->fp,PGROUNDUP(p->file->size));
-
-    p->file = file;
-    if((p->fp = kalloc(PGROUNDUP(file->size))) == 0) 
-    {
-        return 0;
-    }
-
     if (file->fst == FS_FAT)
     {
-        fat_write(file,p->fp,file->size);
+        fat_write(file,*buf,file->size);
     }
     else {
         vprintf("file type is not support\n");
     }
 
-    return p;
+    // maybe need
+    if (*buf)
+        kfree(*buf,PGROUNDUP(file->size));
+
+    return file;
 }
 
 // fs init first

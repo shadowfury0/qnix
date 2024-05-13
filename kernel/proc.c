@@ -8,6 +8,8 @@
 
 // usr main function
 extern void umain(void);
+// kernel page directory
+extern int* kpgdir;
 
 // process arrays
 struct proc ptable[PT_SIZE];
@@ -23,6 +25,7 @@ schedule(void)
 
     for(;;) {
         cli();
+        // sti();
         for (p = ptable; p < &ptable[PT_SIZE]; p++) {
             if (p->state == EMBRYO) {
                 p->state = RUNNABLE;
@@ -35,11 +38,8 @@ schedule(void)
             p->state = RUNNING;
 
             // switch page table
-            // swtich user page table first
-            if (p->upgdir)
-                switchkvm(p->upgdir);
-            else if (p->pgdir)
-                switchkvm(p->pgdir);    
+            if (p->pgdir)
+                switchkvm(p->pgdir);
             swtch(&p->tss);
         }
 
@@ -49,17 +49,12 @@ schedule(void)
                 continue;
             p->parent->state = RUNNABLE;
             // clean stack
-            free_page(PGROUNDUP(p->tss.esp-PGSIZE));
+            free_page(PGROUNDUP(p->tss.esp)-PGSIZE);
             if (p->pgdir)
                 freevm(p->pgdir);
-            if (p->upgdir)
-                freevm(p->upgdir);
-            // free the file allocated
-            if (p->fp)
-                kfree(p->fp,PGROUNDUP(p->file->size));
-            p->pgdir = 0;
-            p->upgdir = 0;
+
             p->state = UNUSED;
+            p->pgdir = 0;
             p->parent = 0;
             p->pid = 0;
             // clean the file
@@ -83,9 +78,7 @@ proc_init(void)
         ptable[i].state = UNUSED;
         ptable[i].pid = 0;
         ptable[i].pgdir = 0;
-        ptable[i].upgdir = 0;
         ptable[i].parent = 0;
-        ptable[i].fp = 0;
         ptable[i].file = 0;
     }
 }
@@ -138,7 +131,6 @@ user_init(void)
     // don't change this is point to 0x0 address for user enter size is fixed  
     memmove(0,&umain, 0x1a);
 
-    p->upgdir = 0;
     p->tss.eip = 0;
     // is the first process need point itself
     curproc = p;
@@ -153,30 +145,17 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
     struct proc* cp;
     if((cp = allocproc()) == 0)
         return -1;
- 
-    // Copy process state from proc.
+        
+    // copy process state from proc.
     if((cp->pgdir = copypg(curproc->pgdir)) == 0)
     {
-        free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
+        free_page(PGROUNDUP(cp->tss.esp)-PGSIZE);
         cp->pgdir = 0;
-        cp->upgdir = 0;
         cp->tss.esp = 0;
         cp->state = UNUSED;
         return -1;
     }
 
-    // must not zero
-    if (curproc->upgdir)
-        if ((cp->upgdir = copypg(curproc->upgdir)) == 0)
-        {
-            free_page(PGROUNDUP(cp->tss.esp-PGSIZE));
-            free_page(cp->pgdir);
-            cp->pgdir = 0;
-            cp->upgdir = 0;
-            cp->tss.esp = 0;
-            cp->state = UNUSED;
-            return -1;
-        }
 
     cp->state = RUNNABLE;
     cp->tss.eip = eip;
@@ -232,10 +211,11 @@ exit(void)
     // parent wake up
     wakeup(p->parent);
 
-    switchkvm(p->pgdir);
-    p->tss.eip = &schedule;
+    switchkvm(kpgdir);
+    // p->tss.eip = &schedule;
     p->state = ZOMBIE;
-    swtch(&p->tss);
+    // swtch(&p->tss);
+    return 0;
 }
 
 int
@@ -267,7 +247,7 @@ wait1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,ui
     return 0;
 }
  
-void
+int
 yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,uint esp)
 {
     curproc->state = EMBRYO;
@@ -283,12 +263,12 @@ yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,u
     curproc->tss.edx = edx;
     curproc->tss.ebx = ebx;
 
-    if (curproc->upgdir)
-        switchkvm(curproc->upgdir);
-    else if (curproc->pgdir)
+    if (curproc->pgdir)
         switchkvm(curproc->pgdir);
     else    
-        panic("kernel page dir not found");
+        panic("page dir not found");
+
+    return 1;
 }
 
 void
@@ -324,7 +304,7 @@ procdump(void)
 }
 
 struct proc*
-get_cur_proc(void)
+myproc(void)
 {
     return  curproc;
 }
@@ -333,5 +313,11 @@ int
 getpid(void)
 {
     return curproc->pid;
+}
+
+int
+sys_getpid(void)
+{
+    return getpid();
 }
 

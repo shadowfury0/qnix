@@ -1,7 +1,7 @@
 #define     TASK_NAME_LEN   16
 
 //process table size
-#define     PT_SIZE         4
+#define     PT_SIZE         8
 
 struct tss {
     ushort link;
@@ -37,10 +37,8 @@ struct proc {
     volatile enum procstate state;
     uint pid;
     int* pgdir;                     // page table
-    int* upgdir;                    // user page table
     struct  proc*  parent;
-    struct  fnode* file;            // process file
-    char*   fp;                     // file allocated
+    struct fnode* file;            // process file
     // struct gatedesc* ldt;        // ldt address
     struct tss tss;
     // char comm[TASK_NAME_LEN];

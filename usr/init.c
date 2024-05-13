@@ -1,25 +1,28 @@
 #include "usr.h"
 
 int
-main(void)
+main(int argc)
 {
     int pid = fork();
-
-    if (pid == 0)
+    if (pid > 0) {
+        for(;;)
+        {
+            sleep(1);
+            printf(pid);
+        }
+    }
+    else if (pid == 0)
     {
-        for(;;)
-        {
+        // for(;;)
+        // {
             sleep(1);
             printf(pid);
-        }
+        // }
+        exit();
     }
-    else if (pid > 0) {
-        for(;;)
-        {
-            sleep(1);
-            printf(pid);
-        }
-    }
+    // exec("_SH         ",0);
+
     for(;;)
-        ;
+    {
+    }
 }

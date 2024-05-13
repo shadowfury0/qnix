@@ -19,8 +19,9 @@ all:
 	${CC} init.c ${CCOPTS} -o init.o
 	${LD} ${LDOPTS} -T usr.ld -o _INIT usys.o init.o
 
-# ${CC} test.c ${CCOPTS} -o test.o
-# ${LD} ${LDOPTS} -T usr.ld -o _TEST usys.o test.o
+	${CC} sh.c ${CCOPTS} -o sh.o
+	${LD} ${LDOPTS} -T usr.ld -o _SH usys.o sh.o
+
 
 clean:
 	rm -f *.o _*

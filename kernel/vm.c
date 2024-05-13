@@ -55,7 +55,7 @@ findpage(int* pgdir, const void *va, int alloc)
         if(!alloc || (pgtab = (int*)alloc_page()) == 0)
             return 0;
         memset(pgtab, 0, PGSIZE);
-        *pde = V2P(pgtab) | PTE_P | PTE_U | PTE_W;
+        *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
     }
     return &pgtab[PTX(va)];
 }
@@ -108,8 +108,8 @@ kvminit(void)
     // load cr3
     switchkvm(kpgdir);
     // other pages
-    int i;
-    uint ps;
+    // int i;
+    // uint ps;
     // for (i=1;i<KPSIZE;i++) {
     //     ps = i * P4MSIZE;
     //     kpgdir[KINDEX+i] = (ps) | PTE_W | PTE_PS;
@@ -188,7 +188,7 @@ allocuvm(int *pgdir, uint oldsz, uint newsz)
         // clean for the user space to map
         memset(mem,0,PGSIZE);
         // map user space
-        if (mappages(pgdir,(char*)s,V2P(mem),PGSIZE,PTE_W|PTE_U)) {
+        if (mappages(pgdir,(char*)s,V2P(mem),PGSIZE,PTE_W | PTE_U)) {
             vprintf("allocate out of memory (2)\n");
             deallocuvm(pgdir, newsz, oldsz);
             free_page(mem);
@@ -226,7 +226,18 @@ copypg(int *pgdir)
     
     if((d = (int*)alloc_page()) == 0)
         return 0;
-    memcpy(d,pgdir,PGSIZE);
+
+    uint i;
+    int *pgtab;
+    for (i=0;i<PGTSIZE;i++) {
+        if (pgdir[i] & PTE_P) {
+            if((pgtab=(int*)alloc_page()) == 0)
+                panic("allocate table error in copypg");
+            memmove(pgtab,pgdir[i],PGSIZE);
+            d[i] = (uint)pgtab;
+        }
+    }
+    memmove(d,pgdir,PGSIZE);
     return d;
 }
 
@@ -236,13 +247,13 @@ freevm(int* pgdir)
 {
     if (pgdir == 0)
         panic("freevm : pgdir error");
-    // deallocvm(pgdir, KBASE, 0);
-    uint  i;
+    // deallocuvm(pgdir, KBASE, 0);
+    uint i;
     for (i=0;i<PGTSIZE;i++) {
         if (pgdir[i] & PTE_P) {
-            char* f = P2V(PTE_ADDR(pgdir[i]));
-            free_page(f);
+            char* f = (char*)P2V(PTE_ADDR(pgdir[i]));
+            // free_page(f);
         }
     }
-    free_page((char*)pgdir);
+    free_page(pgdir);
 }

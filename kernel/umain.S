@@ -2,8 +2,8 @@
 #include "idt.h"
 .globl umain
 umain:
-    movl    $init,%ecx
-    movl    $argv,%edx
+    movl    $init,%ebx
+    movl    $argv,%ecx
     movl    $SYS_exec, %eax
     int     $T_SYSCALL
 
