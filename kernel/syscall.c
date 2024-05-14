@@ -1,6 +1,7 @@
 #include "types.h"
 #include "mmu.h"
 #include "syscall.h"
+#include "proc.h"
 
 extern  int   sys_fork(void);
 extern  int   sys_exit(void);

@@ -13,36 +13,36 @@ int printf(uint);
 
 
 #define SYSCALL(name) \
-int name(void) \
+volatile int name(void) \
 {\
 int res;\
 __asm__ volatile (\
-	"movl (%%esp),%%ebx;int $0x80" \
+	"pusha;int $0x80;popa;" \
 	: "=a" (res) \
-	: "0" (SYS_##name)\
+	: "a" (SYS_##name) \
 ); \
-if (res >= 0) return (int) res; \
-return -1; \
+return (int) res; \
 }
 
 #define SYSCALL1(name,t1,arg1) \
-int name(t1 arg1) \
+volatile int name(t1 arg1) \
 {\
 int res;\
-__asm__ volatile ("int $0x80;" \
+__asm__ volatile ("pusha;int $0x80;popa;" \
 	: "=a" (res) \
-	: "0" (SYS_##name),"b" ((t1)(arg1))); \
-if (res >= 0) return (int) res; \
-return -1; \
+	: "a" (SYS_##name),"b" ((t1)(arg1)) \
+	); \
+return (int) res; \
 }
 
 #define SYSCALL2(name,t1,arg1,t2,arg2) \
-int name(t1 arg1,t2 arg2) \
+volatile int name(t1 arg1,t2 arg2) \
 {\
 int res;\
 __asm__ volatile ("int $0x80;" \
 	: "=a" (res) \
-	: "0" (SYS_##name),"b" ((t1)(arg1)),"c"((t2)(arg2))); \
+	: "a" (SYS_##name),"b" ((t1)(arg1)),"c"((t2)(arg2)) \
+	);\
 if (res >= 0) return (int) res; \
 return -1; \
 }

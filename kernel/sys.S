@@ -5,6 +5,7 @@
 error_call:
     movl    $-1,%eax
     addl    $0x0c,%esp
+    sti
     iret
 # int 0x80
 system_call:
@@ -12,10 +13,6 @@ system_call:
     cmpl    $syscall_table_size,%eax
     ja      error_call
 
-
-    pushl   %ebp
-    pushl   %esi
-    pushl   %edi
 # 3
     pushl   %edx
 # 2
@@ -23,27 +20,21 @@ system_call:
 # 1
     pushl   %ebx
 
-
     call    syscall_table(,%eax,4)
 
     popl    %ebx
     popl    %ecx
     popl    %edx
 
-    popl    %edi
-    popl    %esi
-    popl    %ebp
-
     sti
     iret
 
 sys_fork:
-    cli
 #   esp
     pushl   %esp
 
-#   first ebx arg is eip address for syscall
-    pushl   %ebx
+#  eip address for syscall
+    pushl   0x40(%esp)
     pushl   %ecx
     pushl   %edx
     pushl   %ebx
@@ -66,8 +57,12 @@ sys_fork:
     ret
 
 sys_wait:
+    addl    $0x3c,%esp
+#   esp
     pushl   %esp
-    pushl   %ebx
+
+#  eip address for syscall
+    pushl   0x4(%esp)
     pushl   %eax
     pushl   %ecx
     pushl   %edx
@@ -75,17 +70,19 @@ sys_wait:
     pushl   %ebp
     pushl   %esi
     pushl   %edi
+
     call    wait1
     addl    $0x28,%esp
 
-#   pop syscall before stack
-#   addl    $0x18,%esp
     jmp     schedule
 
 sys_yield:
-    cli
+    addl    $0x3c,%esp
+#   esp
     pushl   %esp
-    pushl   %ebx
+
+#  eip address for syscall
+    pushl   0x4(%esp)
     pushl   %eax
     pushl   %ecx
     pushl   %edx
@@ -95,16 +92,12 @@ sys_yield:
     pushl   %edi
 
     call    yield1
-
     addl    $0x28,%esp
-#   pop syscall before stack
-#   addl    $0x18,%esp
 
     jmp     schedule
 
 sys_exit:
     call    exit
     addl    $8,%esp
-#   pop syscall before stack
 #   addl    $0x18,%esp
     jmp     schedule

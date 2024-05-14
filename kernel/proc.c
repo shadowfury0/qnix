@@ -145,7 +145,6 @@ fork1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eip,uint esp)
     struct proc* cp;
     if((cp = allocproc()) == 0)
         return -1;
-        
     // copy process state from proc.
     if((cp->pgdir = copypg(curproc->pgdir)) == 0)
     {
@@ -247,7 +246,7 @@ wait1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,ui
     return 0;
 }
  
-int
+void
 yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,uint esp)
 {
     curproc->state = EMBRYO;
@@ -268,7 +267,6 @@ yield1(uint edi,uint esi,uint ebp,uint ebx,uint edx,uint ecx,uint eax,uint eip,u
     else    
         panic("page dir not found");
 
-    return 1;
 }
 
 void

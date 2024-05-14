@@ -12,7 +12,7 @@ OBJDUMP = objdump
 debug:
 	objdump -d -M att _INIT > init.asm
 	
-# all:CCOPTS += -g
+all:CCOPTS += -g
 all:
 	${CC} ${SYSCALL} ${CCOPTS} -o usys.o
 

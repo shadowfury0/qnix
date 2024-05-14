@@ -59,9 +59,11 @@ fork:
     addl    $4,%esp
     popl    %esp
 
+    sti
     ret
 
 wait:
+    cli
     pushl   %esp
     pushl   4(%esp)
     pushl   %eax

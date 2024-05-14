@@ -88,6 +88,7 @@ rtctrap(void)
     piceoi();
 
     yield();
+    sti();
 }
 
 volatile void
